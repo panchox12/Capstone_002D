@@ -1,0 +1,39 @@
+# ---------- Secretos ----------
+.env
+.env.local
+*.pem
+*.key
+credenciales.json
+
+# ---------- Python ----------
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+
+# ---------- Node ----------
+node_modules/
+dist/
+.vite/
+npm-debug.log*
+
+# ---------- Sistema operativo ----------
+Thumbs.db
+desktop.ini
+.DS_Store
+
+# ---------- Editor ----------
+.vscode/*
+!.vscode/extensions.json
+.idea/
+
+# ---------- Datos locales ----------
+*.sqlite3
+*.db
+datos_postgres/
+grabaciones_locales/
