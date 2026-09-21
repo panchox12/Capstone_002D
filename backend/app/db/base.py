@@ -17,8 +17,8 @@ class Base(DeclarativeBase):
 class MezclaTiempos:
     """Agrega a cualquier modelo las marcas de creacion y actualizacion.
 
-    En un sistema con dinero de por medio, saber cuando se creo y cuando se
-    modifico cada fila no es opcional: es parte de la trazabilidad.
+    Ya que en el modelo se usa dinero real, es importante saber cuando se 
+    creo y cuando se modifico cada fila por un tema de trazabilidad.
     """
 
     creado_en: Mapped[datetime] = mapped_column(
