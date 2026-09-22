@@ -7,5 +7,6 @@ la tabla.
 
 from app.db.base import Base
 from app.modelos.usuario import EstadoCuenta, Usuario
+from app.modelos.identidad import VerificacionIdentidad
 
-__all__ = ["Base", "EstadoCuenta", "Usuario"]
+__all__ = ["Base", "EstadoCuenta", "Usuario", "VerificacionIdentidad"]
