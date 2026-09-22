@@ -4,7 +4,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.config import configuracion
-from app.routers import salud
+from app.routers import salud, auth
 
 app = FastAPI(
     title=configuracion.app_nombre,
@@ -23,6 +23,7 @@ app.add_middleware(
 )
 
 app.include_router(salud.router)
+app.include_router(auth.router)
 
 
 @app.get("/", tags=["Raiz"])
