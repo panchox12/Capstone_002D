@@ -7,8 +7,13 @@ from collections.abc import Generator
 
 import pytest
 from fastapi.testclient import TestClient
+from sqlalchemy import create_engine, text
+from sqlalchemy.orm import Session
 
+from app.core.config import configuracion
+from app.db.sesion import obtener_db
 from app.main import app
+from app.modelos import Base
 
 
 @pytest.fixture(scope="session")
@@ -17,16 +22,6 @@ def cliente() -> Generator[TestClient, None, None]:
     with TestClient(app) as c:
         yield c
 
-
-# -------------------------------------------------------------------
-# NUEVO: Base de datos aislada para pruebas (Fase 2)
-# -------------------------------------------------------------------
-from sqlalchemy import create_engine, text
-from sqlalchemy.orm import Session
-
-from app.core.config import configuracion
-from app.db.sesion import obtener_db
-from app.modelos import Base
 
 # Misma conexion, otra base de datos
 URL_PRUEBAS = configuracion.database_url.rsplit("/", 1)[0] + "/cachai_test"
