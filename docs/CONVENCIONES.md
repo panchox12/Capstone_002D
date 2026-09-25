@@ -20,7 +20,7 @@ Formato (Conventional Commits):
 
 ### Alcances
 
-auth, identidad, perfiles, tokens, solicitudes, sesion, cobro, busqueda,
+auth, identidad, perfiles, tokens, catalogo, habilidades, solicitudes, sesion, cobro, busqueda,
 grabacion, moderacion, admin, frontend, infra, db
 
 ### Ejemplos
