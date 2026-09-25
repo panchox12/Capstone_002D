@@ -11,6 +11,7 @@ from app.modelos.parametro import ParametroSistema
 from app.modelos.lote_tokens import EstadoLote, LoteDeTokens, OrigenLote, TipoSaldo
 from app.modelos.transaccion import TipoTransaccion, Transaccion
 from app.modelos.retencion import EstadoRetencion, Retencion
+from app.modelos.verificacion import ResultadoVerificacion, VerificacionIdentidad
 
 __all__ = ["Base", "EstadoCuenta", "Usuario", "ParametroSistema", "EstadoLote", "LoteDeTokens",
-           "OrigenLote", "TipoSaldo", "TipoTransaccion", "Transaccion", "EstadoRetencion", "Retencion"]
+           "OrigenLote", "TipoSaldo", "TipoTransaccion", "Transaccion", "EstadoRetencion", "Retencion", "ResultadoVerificacion", "VerificacionIdentidad"]

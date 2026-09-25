@@ -36,6 +36,10 @@ class Configuracion(BaseSettings):
     algoritmo_jwt: str = "HS256"
     minutos_expiracion_token: int = 60
 
+    # --- Verificacion de identidad ---
+    sal_documento: str
+    proveedor_identidad: str = "simulado"
+
     @property
     def es_desarrollo(self) -> bool:
         return self.app_entorno == "desarrollo"
