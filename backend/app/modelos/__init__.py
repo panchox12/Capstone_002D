@@ -8,5 +8,9 @@ la tabla.
 from app.db.base import Base
 from app.modelos.usuario import EstadoCuenta, Usuario
 from app.modelos.parametro import ParametroSistema
+from app.modelos.lote_tokens import EstadoLote, LoteDeTokens, OrigenLote, TipoSaldo
+from app.modelos.transaccion import TipoTransaccion, Transaccion
+from app.modelos.retencion import EstadoRetencion, Retencion
 
-__all__ = ["Base", "EstadoCuenta", "Usuario", "ParametroSistema"]
+__all__ = ["Base", "EstadoCuenta", "Usuario", "ParametroSistema", "EstadoLote", "LoteDeTokens",
+           "OrigenLote", "TipoSaldo", "TipoTransaccion", "Transaccion", "EstadoRetencion", "Retencion"]
