@@ -13,6 +13,8 @@ from app.modelos.transaccion import TipoTransaccion, Transaccion
 from app.modelos.retencion import EstadoRetencion, Retencion
 from app.modelos.verificacion import ResultadoVerificacion, VerificacionIdentidad
 from app.modelos.tema import EstadoTema, Tema
+from app.modelos.habilidad import EstadoHabilidad, HabilidadOfrecida
 
 __all__ = ["Base", "EstadoCuenta", "Usuario", "ParametroSistema", "EstadoLote", "LoteDeTokens",
-           "OrigenLote", "TipoSaldo", "TipoTransaccion", "Transaccion", "EstadoRetencion", "Retencion", "ResultadoVerificacion", "VerificacionIdentidad", "EstadoTema", "Tema"]
+           "OrigenLote", "TipoSaldo", "TipoTransaccion", "Transaccion", "EstadoRetencion", "Retencion", "ResultadoVerificacion", "VerificacionIdentidad", "EstadoTema", "Tema",
+           "EstadoHabilidad", "HabilidadOfrecida"]
