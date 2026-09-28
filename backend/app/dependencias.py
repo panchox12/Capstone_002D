@@ -11,6 +11,7 @@ from app.core.seguridad import TIPO_ACCESO, decodificar_token
 from app.db.sesion import obtener_db
 from app.modelos.usuario import EstadoCuenta, Usuario
 from app.servicios import usuarios as servicio_usuarios
+from app.servicios import verificacion as servicio_verificacion
 
 esquema_oauth2 = OAuth2PasswordBearer(tokenUrl="auth/login")
 
@@ -53,4 +54,20 @@ def usuario_activo(usuario: Usuario = Depends(usuario_actual)) -> Usuario:
             detail="Tu cuenta no se encuentra activa",
         )
 
+    return usuario
+
+def usuario_verificado(
+    usuario: Usuario = Depends(usuario_activo),
+    db: Session = Depends(obtener_db),
+) -> Usuario:
+    """Exige ademas la identidad verificada (seccion 4.2).
+ 
+    Se usa para las acciones que exponen al usuario ante otros: ofrecer
+    habilidades, y mas adelante enviar solicitudes.
+    """
+    if not servicio_verificacion.esta_verificado(db, usuario.id):
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Debes verificar tu identidad antes de ofrecer o solicitar consultas",
+        )
     return usuario
