@@ -14,7 +14,8 @@ from app.modelos.retencion import EstadoRetencion, Retencion
 from app.modelos.verificacion import ResultadoVerificacion, VerificacionIdentidad
 from app.modelos.tema import EstadoTema, Tema
 from app.modelos.habilidad import EstadoHabilidad, HabilidadOfrecida
+from app.modelos.perfil import PerfilPublico
 
 __all__ = ["Base", "EstadoCuenta", "Usuario", "ParametroSistema", "EstadoLote", "LoteDeTokens",
            "OrigenLote", "TipoSaldo", "TipoTransaccion", "Transaccion", "EstadoRetencion", "Retencion", "ResultadoVerificacion", "VerificacionIdentidad", "EstadoTema", "Tema",
-           "EstadoHabilidad", "HabilidadOfrecida"]
+           "EstadoHabilidad", "HabilidadOfrecida", "PerfilPublico"]
