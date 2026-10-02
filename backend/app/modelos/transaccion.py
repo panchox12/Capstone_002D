@@ -39,6 +39,11 @@ class Transaccion(Base, MezclaTiempos):
     lote_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("lote_tokens.id"), nullable=False)
     tipo: Mapped[TipoTransaccion] = mapped_column(Enum(TipoTransaccion, name="tipo_transaccion"), nullable=False)
 
+    #Permite saber de que lote salieron lo tokens retenidos para devolverlos igual.
+    retencion_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("retencion.id"), nullable=True, index=True
+    )
+
     # Sin FK todavia: la tabla que corresponde a esta columna aun no existe.
     sesion_id: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), nullable=True)
 
