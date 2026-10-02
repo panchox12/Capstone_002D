@@ -24,6 +24,7 @@ class Configuracion(BaseSettings):
     app_nombre: str = "Cachai"
     app_entorno: str = "desarrollo"
     app_debug: bool = False
+    url_frontend: str = "http://localhost:5173"
 
     # --- Base de datos ---
     database_url: str
