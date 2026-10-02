@@ -1,0 +1,44 @@
+@import "tailwindcss";
+
+/* Colores y tipografias de Cachai. Cada variable se convierte en clases:
+   --color-tinta da bg-tinta, text-tinta, border-tinta; --font-titulo da font-titulo. */
+@theme {
+  --color-tinta: #1e2a78;
+  --color-resaltador: #ffe14d;
+  --color-papel: #ffffff;
+  --color-grafito: #1c2333;
+  --color-niebla: #eef0f6;
+  --color-acierto: #1f7a54;
+  --color-alerta: #b42318;
+
+  --font-titulo: "Bricolage Grotesque Variable", system-ui, sans-serif;
+  --font-cuerpo: "Atkinson Hyperlegible", system-ui, sans-serif;
+}
+
+/* El trazo de resaltador del logo: la unica marca grafica fuerte de la interfaz. */
+@utility resaltado {
+  background-image: linear-gradient(
+    transparent 55%,
+    var(--color-resaltador) 55%,
+    var(--color-resaltador) 90%,
+    transparent 90%
+  );
+}
+
+@layer base {
+  body {
+    @apply bg-papel font-cuerpo text-grafito antialiased;
+  }
+
+  h1,
+  h2,
+  h3 {
+    @apply font-titulo text-tinta;
+  }
+
+  a,
+  button,
+  input {
+    @apply focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-tinta;
+  }
+}
