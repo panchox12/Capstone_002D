@@ -1,5 +1,9 @@
 import { useEffect, useState } from 'react'
 import { obtenerCatalogo } from '../api/temas'
+import { Aviso } from '../componentes/ui/Aviso'
+import { Ficha } from '../componentes/ui/Ficha'
+import { Tarjeta } from '../componentes/ui/Tarjeta'
+import { TituloPagina } from '../componentes/ui/TituloPagina'
 
 /** Catalogo de tres niveles, leido de GET /temas. Es publico. */
 export function Catalogo() {
@@ -21,40 +25,39 @@ export function Catalogo() {
   }, [])
 
   if (error) {
+    return <Aviso tipo="error">No pudimos cargar los temas. {error}</Aviso>
+  }
+  if (temas === null) {
     return (
-      <p role="alert" className="text-alerta">
-        No pudimos cargar los temas. {error}
+      <p role="status" className="text-sm text-tinta/65">
+        Cargando temas…
       </p>
     )
   }
-  if (temas === null) {
-    return <p role="status">Cargando temas…</p>
-  }
   if (temas.length === 0) {
-    return <p>Todavía no hay temas publicados.</p>
+    return <Aviso tipo="neutro">Todavía no hay temas publicados.</Aviso>
   }
 
   return (
     <section>
-      <h1 className="text-3xl font-extrabold">Temas</h1>
-      <p className="mt-2">Estos son los temas en los que puedes pedir ayuda.</p>
-      <div className="mt-8 grid gap-10">
+      <TituloPagina titulo="Temas" bajada="Estos son los temas en los que puedes pedir ayuda." />
+      <div className="grid gap-4 md:grid-cols-2">
         {temas.map((area) => (
-          <article key={area.id}>
-            <h2 className="text-2xl font-bold">{area.nombre}</h2>
+          <Tarjeta key={area.id} como="article" className="p-6">
+            <h2 className="text-xl">{area.nombre}</h2>
             {area.hijos.map((materia) => (
               <div key={materia.id} className="mt-4">
-                <h3 className="text-lg font-semibold">{materia.nombre}</h3>
+                <h3 className="text-[15px]">{materia.nombre}</h3>
                 <ul className="mt-2 flex flex-wrap gap-2">
                   {materia.hijos.map((tema) => (
-                    <li key={tema.id} className="rounded-full bg-niebla px-3 py-1">
-                      {tema.nombre}
+                    <li key={tema.id}>
+                      <Ficha>{tema.nombre}</Ficha>
                     </li>
                   ))}
                 </ul>
               </div>
             ))}
-          </article>
+          </Tarjeta>
         ))}
       </div>
     </section>

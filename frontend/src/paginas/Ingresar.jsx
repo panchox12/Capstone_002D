@@ -1,6 +1,10 @@
 import { useState } from 'react'
 import { Navigate, useLocation, useNavigate } from 'react-router'
 import { useSesion } from '../sesion/useSesion'
+import { Aviso } from '../componentes/ui/Aviso'
+import { Boton } from '../componentes/ui/Boton'
+import { Tarjeta } from '../componentes/ui/Tarjeta'
+import { claseCampo, claseEtiqueta } from '../componentes/ui/clases'
 
 function mensajePara(error) {
   if (error.estado === 401) return 'Correo o contraseña incorrectos.'
@@ -37,10 +41,11 @@ export function Ingresar() {
   }
 
   return (
-    <section className="max-w-sm">
-      <h1 className="text-3xl font-extrabold">Ingresar</h1>
+    <Tarjeta como="section" className="mx-auto mt-6 max-w-md p-7">
+      <h1 className="text-[28px]">Ingresar</h1>
+      <p className="mt-1 text-sm text-tinta/65">Con el correo y la contraseña de tu cuenta.</p>
       <form onSubmit={enviar} className="mt-6 grid gap-4" noValidate>
-        <label className="grid gap-1">
+        <label className={claseEtiqueta}>
           Correo
           <input
             type="email"
@@ -48,10 +53,10 @@ export function Ingresar() {
             required
             value={correo}
             onChange={(e) => setCorreo(e.target.value)}
-            className="rounded-md border border-grafito/30 px-3 py-2"
+            className={claseCampo}
           />
         </label>
-        <label className="grid gap-1">
+        <label className={claseEtiqueta}>
           Contraseña
           <input
             type="password"
@@ -59,22 +64,14 @@ export function Ingresar() {
             required
             value={contrasena}
             onChange={(e) => setContrasena(e.target.value)}
-            className="rounded-md border border-grafito/30 px-3 py-2"
+            className={claseCampo}
           />
         </label>
-        {error && (
-          <p role="alert" className="text-alerta">
-            {error}
-          </p>
-        )}
-        <button
-          type="submit"
-          disabled={enviando}
-          className="rounded-md bg-tinta px-5 py-3 font-bold text-papel hover:brightness-110 disabled:opacity-60"
-        >
+        {error && <Aviso tipo="error">{error}</Aviso>}
+        <Boton type="submit" tamano="grande" disabled={enviando} className="mt-1 w-full">
           {enviando ? 'Ingresando…' : 'Ingresar'}
-        </button>
+        </Boton>
       </form>
-    </section>
+    </Tarjeta>
   )
 }
