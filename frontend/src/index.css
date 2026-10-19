@@ -1,44 +1,55 @@
 @import "tailwindcss";
 
-/* Colores y tipografias de Cachai. Cada variable se convierte en clases:
-   --color-tinta da bg-tinta, text-tinta, border-tinta; --font-titulo da font-titulo. */
+/* Colores, letras, bordes y sombras de Cachai, tomados del diseño de pantallas.
+   Cada variable se convierte en clases: --color-oceano da bg-oceano, text-oceano,
+   border-oceano; --radius-tarjeta da rounded-tarjeta; --shadow-tarjeta da shadow-tarjeta. */
 @theme {
-  --color-tinta: #1e2a78;
-  --color-resaltador: #ffe14d;
-  --color-papel: #ffffff;
-  --color-grafito: #1c2333;
-  --color-niebla: #eef0f6;
+  /* Azules: el principal, su version oscura y el texto que va sobre fondos celestes */
+  --color-oceano: #0b66ae;
+  --color-oceano-oscuro: #084b81;
+  --color-abismo: #063a64;
+  --color-celeste: #d3e4f3;
+  --color-celeste-medio: #b0cfea;
+
+  /* Fondo de la pagina, texto y grises */
+  --color-fondo: #f5f8fb;
+  --color-tinta: #122430;
+  --color-niebla: #eaecee;
+  --color-bruma: #ced2d6;
+  --color-ceniza: #90959b;
+  --color-grafito: #575c62;
+
+  /* Estados */
   --color-acierto: #1f7a54;
   --color-alerta: #b42318;
 
-  --font-titulo: "Bricolage Grotesque Variable", system-ui, sans-serif;
-  --font-cuerpo: "Atkinson Hyperlegible", system-ui, sans-serif;
-}
+  --font-titulo: "Archivo Variable", system-ui, sans-serif;
+  --font-cuerpo: "Archivo Variable", system-ui, sans-serif;
+  /* Los relojes usan una letra de ancho fijo para que los numeros no salten al cambiar */
+  --font-reloj: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
 
-/* El trazo de resaltador del logo: la unica marca grafica fuerte de la interfaz. */
-@utility resaltado {
-  background-image: linear-gradient(
-    transparent 55%,
-    var(--color-resaltador) 55%,
-    var(--color-resaltador) 90%,
-    transparent 90%
-  );
+  --radius-tarjeta: 20px;
+  --shadow-tarjeta: 0 2px 10px rgb(8 34 60 / 0.08);
+  --shadow-flotante: 0 10px 40px rgb(8 34 60 / 0.15);
 }
 
 @layer base {
   body {
-    @apply bg-papel font-cuerpo text-grafito antialiased;
+    @apply bg-fondo font-cuerpo text-tinta antialiased;
   }
 
   h1,
   h2,
-  h3 {
-    @apply font-titulo text-tinta;
+  h3,
+  h4 {
+    @apply font-titulo font-extrabold tracking-tight text-tinta;
   }
 
   a,
   button,
-  input {
-    @apply focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-tinta;
+  input,
+  textarea,
+  select {
+    @apply focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-oceano;
   }
 }

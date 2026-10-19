@@ -10,7 +10,11 @@ export function RutaPrivada() {
   const ubicacion = useLocation()
 
   if (cargando) {
-    return <p role="status">Cargando tu sesión…</p>
+    return (
+      <p role="status" className="text-sm text-tinta/65">
+        Cargando tu sesión…
+      </p>
+    )
   }
   if (!usuario) {
     return <Navigate to="/ingresar" replace state={{ desde: ubicacion.pathname }} />
