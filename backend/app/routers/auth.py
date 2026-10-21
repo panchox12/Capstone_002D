@@ -20,6 +20,7 @@ from app.dependencias import usuario_actual
 from app.esquemas.usuario import TokenRespuesta, UsuarioCrear, UsuarioLeer
 from app.modelos.usuario import EstadoCuenta, Usuario
 from app.servicios import usuarios as servicio_usuarios
+from app.servicios import entradas
 
 router = APIRouter(prefix="/auth", tags=["Autenticacion"])
 
@@ -96,6 +97,10 @@ def confirmar_correo(token: str, db: Session = Depends(obtener_db)) -> dict:
     usuario.fecha_consentimiento_grabacion = datetime.now(timezone.utc)
     servicio_usuarios.activar_cuenta(db, usuario)
 
+    # La primera entrega de tokens gratuitos llega al confirmar,
+    # para que una cuenta nueva no tenga que esperar al lunes.
+    entradas.entregar_semanal(db, usuario.id)
+    db.commit()
     return {"mensaje": "Cuenta confirmada. Ya puedes iniciar sesion"}
 
 

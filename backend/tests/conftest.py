@@ -14,6 +14,9 @@ from app.core.config import configuracion
 from app.db.sesion import obtener_db
 from app.main import app
 from app.modelos import Base
+from app.modelos.parametro import ParametroSistema
+from scripts.sembrar_parametros import PARAMETROS_INICIALES
+
 
 
 @pytest.fixture(scope="session")
@@ -77,3 +80,11 @@ def cliente_db(db_prueba: Session) -> Generator[TestClient, None, None]:
     with TestClient(app) as c:
         yield c
     app.dependency_overrides.clear()
+
+
+@pytest.fixture()
+def parametros_iniciales(db_prueba: Session) -> None:
+    """Carga en la base de pruebas los mismos parametros que el semillero."""
+    for nombre, valor, descripcion in PARAMETROS_INICIALES:
+        db_prueba.add(ParametroSistema(nombre=nombre, valor=valor, descripcion=descripcion))
+    db_prueba.flush()
