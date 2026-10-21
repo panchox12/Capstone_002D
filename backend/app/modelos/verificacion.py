@@ -1,8 +1,8 @@
 """Verificacion de identidad.
  
 Esta tabla no tiene, ni debe tener nunca, una columna que guarde o apunte
-a una imagen, ni el numero de documento en claro (seccion 4.3 de la
-especificacion y ley 21.719). Solo persiste el resultado.
+a una imagen, ni el numero de documento en claro, porque la ley 21.719 
+clasifica los datos biometricos como sensibles. Solo persiste el resultado
 """
  
 import uuid

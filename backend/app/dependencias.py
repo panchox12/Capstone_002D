@@ -60,7 +60,7 @@ def usuario_verificado(
     usuario: Usuario = Depends(usuario_activo),
     db: Session = Depends(obtener_db),
 ) -> Usuario:
-    """Exige ademas la identidad verificada (seccion 4.2).
+    """Exige ademas la identidad verificada.
  
     Se usa para las acciones que exponen al usuario ante otros: ofrecer
     habilidades, y mas adelante enviar solicitudes.

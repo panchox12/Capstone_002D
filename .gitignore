@@ -37,3 +37,6 @@ desktop.ini
 *.db
 datos_postgres/
 grabaciones_locales/
+
+# ---------- Archivos del editor de SQL ----------
+*.session.sql
