@@ -33,7 +33,7 @@ class HabilidadNoEncontrada(Exception):
  
  
 def validar_precio(db: Session, precio: int) -> None:
-    """Seccion 3.6: mayor que cero, y bajo el maximo si el maximo esta activo.
+    """El precio debe ser mayor que cero, y no superar el maximo si el maximo esta activo.
  
     Un maximo de 0 significa que el limite esta desactivado.
     """

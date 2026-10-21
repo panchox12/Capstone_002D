@@ -1,4 +1,4 @@
-"""Catalogo jerarquico de temas, de tres niveles (seccion 5.1).
+"""Catalogo jerarquico de temas, de tres niveles.
  
 Ejemplo: Ciencias exactas (nivel 1) > Matematicas (nivel 2) > Algebra (nivel 3).
 Solo los temas del nivel 3 se pueden ofrecer como habilidad.

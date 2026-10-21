@@ -57,7 +57,7 @@ def test_contrasena_sin_numero_es_rechazada(cliente_db: TestClient) -> None:
 
 
 def test_sin_consentimiento_de_grabacion_no_se_registra(cliente_db: TestClient) -> None:
-    """Seccion 9.4: el consentimiento es obligatorio y separado."""
+    """El consentimiento de grabacion es obligatorio y va separado de los terminos."""
     assert _registrar(cliente_db, consentimiento_grabacion=False).status_code == 422
 
 
