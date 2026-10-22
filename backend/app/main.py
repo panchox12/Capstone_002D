@@ -4,7 +4,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.config import configuracion
-from app.routers import salud, auth, verificacion, temas, habilidades, perfiles
+from app.routers import salud, auth, verificacion, temas, habilidades, perfiles, tokens, tienda
 
 app = FastAPI(
     title=configuracion.app_nombre,
@@ -28,6 +28,9 @@ app.include_router(verificacion.router)
 app.include_router(temas.router)
 app.include_router(habilidades.router)
 app.include_router(perfiles.router)
+app.include_router(tokens.router)
+app.include_router(tienda.router)
+
 
 @app.get("/", tags=["Raiz"])
 def raiz() -> dict:

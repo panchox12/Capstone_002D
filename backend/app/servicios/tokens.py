@@ -92,6 +92,29 @@ def calcular_saldo(
         sentencia = sentencia.where(LoteDeTokens.tipo_saldo == tipo_saldo)
     return int(db.execute(sentencia).scalar_one())
 
+def calcular_retenido(db: Session, usuario_id: uuid.UUID) -> int:
+    #Tokens apartados en retenciones activas: ya no estan en el saldo, pero tampoco se gastaron.
+    sentencia = select(func.coalesce(func.sum(Retencion.cantidad), 0)).where(
+        Retencion.usuario_id == usuario_id,
+        Retencion.estado == EstadoRetencion.ACTIVA,
+    )
+    return int(db.execute(sentencia).scalar_one())
+
+
+def lotes_vigentes(db: Session, usuario_id: uuid.UUID) -> list[LoteDeTokens]:
+    #Lotes con saldo y sin vencer, del que vence antes al que vence despues. Solo lectura.
+    sentencia = (
+        select(LoteDeTokens)
+        .where(
+            LoteDeTokens.usuario_id == usuario_id,
+            LoteDeTokens.cantidad_restante > 0,
+            LoteDeTokens.fecha_vencimiento > ahora(),
+        )
+        .order_by(LoteDeTokens.fecha_vencimiento)
+    )
+    return list(db.execute(sentencia).scalars())
+
+
 # ---------------------------------------------------------------------------
 # Entradas
 # ---------------------------------------------------------------------------
