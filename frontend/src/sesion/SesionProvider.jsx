@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { iniciarSesion, obtenerUsuarioActual } from '../api/auth'
 import { registrarAlExpirarSesion } from '../api/cliente'
+import { avisarDesconexion, enviarLatido, MILISEGUNDOS_ENTRE_LATIDOS } from '../api/presencia'
 import { ContextoSesion } from './contexto'
 
 const CLAVE_TOKEN = 'cachai_token'
@@ -23,6 +24,9 @@ export function SesionProvider({ children }) {
   const [usuario, setUsuario] = useState(null)
 
   const salir = useCallback(() => {
+    // Aviso de desconexion "de cortesia": si falla, la marca en Redis vence sola igual
+    const tokenAnterior = localStorage.getItem(CLAVE_TOKEN)
+    if (tokenAnterior) avisarDesconexion(tokenAnterior).catch(() => {})
     localStorage.removeItem(CLAVE_TOKEN)
     setToken(null)
     setUsuario(null)
@@ -49,6 +53,15 @@ export function SesionProvider({ children }) {
       vigente = false
     }
   }, [token, salir])
+
+  // Mientras haya sesion, un latido al entrar y otro cada 30 segundos
+  useEffect(() => {
+    if (!usuario) return undefined
+    const latir = () => enviarLatido(token).catch(() => {})
+    latir()
+    const intervalo = setInterval(latir, MILISEGUNDOS_ENTRE_LATIDOS)
+    return () => clearInterval(intervalo)
+  }, [usuario, token])
 
   const ingresar = useCallback(async (correo, contrasena) => {
     const { access_token: nuevoToken } = await iniciarSesion(correo, contrasena)

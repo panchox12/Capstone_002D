@@ -78,6 +78,13 @@ def test_un_usuario_suspendido_no_tiene_perfil_publico(db_prueba: Session, usuar
     with pytest.raises(servicio.PerfilNoEncontrado):
         servicio.obtener_publico(db_prueba, "ana-profe")
 
+def test_quien_nunca_edito_su_perfil_igual_tiene_perfil_publico(db_prueba: Session, usuario: Usuario) -> None:
+    encontrado, perfil = servicio.obtener_publico(db_prueba, str(usuario.id))
+
+    assert encontrado.id == usuario.id
+    assert perfil.biografia is None
+    assert perfil.total_evaluaciones == 0
+    assert db_prueba.get(servicio.PerfilPublico, usuario.id) is None
 
 def test_el_qr_devuelve_bytes_png() -> None:
     png = servicio.generar_qr_png("https://ejemplo.com/u/ana-profe")

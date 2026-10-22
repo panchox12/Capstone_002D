@@ -1,4 +1,4 @@
-import { render, screen, within } from '@testing-library/react'
+import { render, screen, waitFor, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router'
 import { describe, expect, it } from 'vitest'
@@ -88,6 +88,50 @@ describe('sesion y rutas privadas', () => {
     const menu = screen.getByRole('navigation', { name: 'Principal' })
     expect(within(menu).getByRole('link', { name: 'Ingresar' })).toBeInTheDocument()
     expect(localStorage.getItem('cachai_token')).toBeNull()
+  })
+})
+
+describe('presencia', () => {
+  function llamadas(fetchFalso, metodo, ruta) {
+    return fetchFalso.mock.calls.filter(([url, opciones]) => url.endsWith(ruta) && opciones?.method === metodo)
+  }
+
+  it('con sesion iniciada envia un latido de presencia', async () => {
+    localStorage.setItem('cachai_token', 'token-guardado')
+    const fetchFalso = simularApi({
+      'GET /auth/yo': () => respuestaJson(USUARIO_ANA),
+      'POST /presencia/latido': () => new Response(null, { status: 204 }),
+    })
+
+    abrirEn('/mi-cuenta')
+
+    await waitFor(() => expect(llamadas(fetchFalso, 'POST', '/presencia/latido')).toHaveLength(1))
+    const [, opciones] = llamadas(fetchFalso, 'POST', '/presencia/latido')[0]
+    expect(opciones.headers.Authorization).toBe('Bearer token-guardado')
+  })
+
+  it('sin sesion no envia latidos', async () => {
+    const fetchFalso = simularApi({})
+
+    abrirEn('/')
+
+    await screen.findByRole('heading', { name: 'Tu duda, resuelta en quince minutos.' })
+    expect(llamadas(fetchFalso, 'POST', '/presencia/latido')).toHaveLength(0)
+  })
+
+  it('al cerrar sesion avisa la desconexion', async () => {
+    localStorage.setItem('cachai_token', 'token-guardado')
+    const fetchFalso = simularApi({
+      'GET /auth/yo': () => respuestaJson(USUARIO_ANA),
+      'POST /presencia/latido': () => new Response(null, { status: 204 }),
+      'DELETE /presencia': () => new Response(null, { status: 204 }),
+    })
+    const usuario = userEvent.setup()
+    abrirEn('/')
+
+    await usuario.click(await screen.findByRole('button', { name: 'Cerrar sesión' }))
+
+    expect(llamadas(fetchFalso, 'DELETE', '/presencia')).toHaveLength(1)
   })
 })
 

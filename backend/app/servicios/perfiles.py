@@ -1,5 +1,6 @@
 """Perfil publico y generacion de codigos QR."""
 
+from decimal import Decimal
 import io
 import re
 import uuid
@@ -25,6 +26,18 @@ class EnlaceEnUso(Exception):
 
 class PerfilNoEncontrado(Exception):
     pass
+
+
+def _perfil_vacio(usuario_id: uuid.UUID) -> PerfilPublico:
+    """Perfil en blanco para quien nunca edito el suyo. No se guarda: solo se muestra."""
+    return PerfilPublico(
+        usuario_id=usuario_id,
+        biografia=None,
+        enlace_personalizado=None,
+        reputacion_promedio=Decimal("0.00"),
+        total_evaluaciones=0,
+        consultas_completadas=0,
+    )
 
 
 def obtener_o_crear(db: Session, usuario_id: uuid.UUID) -> PerfilPublico:
@@ -72,6 +85,10 @@ def obtener_publico(db: Session, identificador: str) -> tuple[Usuario, PerfilPub
     try:
         id_uuid = uuid.UUID(identificador)
         perfil = db.get(PerfilPublico, id_uuid)
+        # Quien nunca edito su perfil no tiene fila en perfil_publico, pero igual
+        # tiene que poder recibir visitas: por ejemplo, un tutor recien publicado.
+        if perfil is None and db.get(Usuario, id_uuid) is not None:
+            perfil = _perfil_vacio(id_uuid)
     except ValueError:
         pass
 
