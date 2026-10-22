@@ -3,20 +3,25 @@
 pytest carga este archivo automaticamente. No hay que importarlo.
 """
 
+import os
 from collections.abc import Generator
 
+# Antes de importar la aplicacion: las pruebas no levantan los procesos programados.
+os.environ["PLANIFICADOR_ACTIVO"] = "false"
+
+import fakeredis
 import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine, text
 from sqlalchemy.orm import Session
 
 from app.core.config import configuracion
+from app.core.redis import obtener_redis
 from app.db.sesion import obtener_db
 from app.main import app
 from app.modelos import Base
 from app.modelos.parametro import ParametroSistema
 from scripts.sembrar_parametros import PARAMETROS_INICIALES
-
 
 
 @pytest.fixture(scope="session")
@@ -88,3 +93,12 @@ def parametros_iniciales(db_prueba: Session) -> None:
     for nombre, valor, descripcion in PARAMETROS_INICIALES:
         db_prueba.add(ParametroSistema(nombre=nombre, valor=valor, descripcion=descripcion))
     db_prueba.flush()
+
+
+@pytest.fixture(autouse=True)
+def redis_falso() -> Generator[fakeredis.FakeRedis, None, None]:
+    """Todas las pruebas usan un Redis falso en memoria, vacio al empezar cada una."""
+    falso = fakeredis.FakeRedis(decode_responses=True)
+    app.dependency_overrides[obtener_redis] = lambda: falso
+    yield falso
+    app.dependency_overrides.pop(obtener_redis, None)
