@@ -25,3 +25,4 @@ class PerfilPublicoLeer(BaseModel):
     total_evaluaciones: int
     consultas_completadas: int
     habilidades: list[HabilidadLeer]
+    en_linea: bool

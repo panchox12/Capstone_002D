@@ -1,8 +1,10 @@
 """Endpoints de perfiles publicos y codigo QR."""
 
+import redis
 from fastapi import APIRouter, Depends, HTTPException, Response, status
 from sqlalchemy.orm import Session
 
+from app.core.redis import obtener_redis
 from app.db.sesion import obtener_db
 from app.dependencias import usuario_activo
 from app.esquemas.habilidad import HabilidadLeer
@@ -10,6 +12,7 @@ from app.esquemas.perfil import PerfilActualizar, PerfilPublicoLeer
 from app.modelos.usuario import Usuario
 from app.servicios import habilidades as servicio_habilidades
 from app.servicios import perfiles as servicio
+from app.servicios import presencia
 
 router = APIRouter(prefix="/perfiles", tags=["Perfiles"])
 
@@ -19,6 +22,7 @@ def actualizar_mio(
     datos: PerfilActualizar,
     usuario: Usuario = Depends(usuario_activo),
     db: Session = Depends(obtener_db),
+    r: redis.Redis = Depends(obtener_redis),
 ) -> PerfilPublicoLeer:
     try:
         perfil = servicio.actualizar_propio(
@@ -60,6 +64,7 @@ def actualizar_mio(
         total_evaluaciones=perfil.total_evaluaciones,
         consultas_completadas=perfil.consultas_completadas,
         habilidades=habilidades,
+        en_linea=presencia.esta_en_linea(r, usuario.id),
     )
 
 
@@ -67,6 +72,7 @@ def actualizar_mio(
 def ver_perfil(
     identificador: str,
     db: Session = Depends(obtener_db),
+    r: redis.Redis = Depends(obtener_redis),
 ) -> PerfilPublicoLeer:
     try:
         usuario, perfil = servicio.obtener_publico(db, identificador)
@@ -94,6 +100,7 @@ def ver_perfil(
         total_evaluaciones=perfil.total_evaluaciones,
         consultas_completadas=perfil.consultas_completadas,
         habilidades=habilidades,
+        en_linea=presencia.esta_en_linea(r, usuario.id),
     )
 
 
