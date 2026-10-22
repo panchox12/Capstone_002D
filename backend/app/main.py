@@ -7,18 +7,13 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.config import configuracion
-from app.procesos import planificador
-from app.routers import salud, auth, verificacion, temas, habilidades, perfiles, tokens, tienda, solicitudes, presencia
+from app.routers import salud, auth, verificacion, temas, habilidades, perfiles, tokens, tienda, presencia
 
 
 @asynccontextmanager
 async def ciclo_de_vida(_app: FastAPI) -> AsyncIterator[None]:
     """Lo que corre al levantar la API (antes del yield) y al apagarla (despues)."""
-    if configuracion.planificador_activo:
-        planificador.iniciar()
     yield
-    if configuracion.planificador_activo:
-        planificador.detener()
 
 
 app = FastAPI(
@@ -46,7 +41,7 @@ app.include_router(habilidades.router)
 app.include_router(perfiles.router)
 app.include_router(tokens.router)
 app.include_router(tienda.router)
-app.include_router(solicitudes.router)
+#app.include_router(solicitudes.router)
 app.include_router(presencia.router)
 
 @app.get("/", tags=["Raiz"])
