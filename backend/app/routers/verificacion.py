@@ -6,6 +6,7 @@ temporal en disco todo lo que supere cierto tamano (por defecto, alrededor
 de 1 MB), antes de que nuestro codigo se ejecute. Con JSON, el cuerpo
 completo de la peticion se lee en memoria.
 """
+from datetime import datetime
  
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import Base64Bytes, BaseModel, field_validator
@@ -58,7 +59,18 @@ def _validar_imagen(datos: bytes, campo: str) -> None:
             status.HTTP_413_REQUEST_ENTITY_TOO_LARGE,
             f"{campo} supera los 5 MB permitidos",
         )
- 
+
+class EstadoVerificacion(BaseModel):
+    verificado: bool
+    fecha: datetime | None
+
+@router.get("/estado", response_model=EstadoVerificacion, summary="Mi estado de verificacion")
+def mi_estado(
+    usuario: Usuario = Depends(usuario_activo),
+    db: Session = Depends(obtener_db),
+) -> EstadoVerificacion:
+    fecha = servicio.fecha_de_aprobacion(db, usuario.id)
+    return EstadoVerificacion(verificado=fecha is not None, fecha=fecha)
  
 @router.post("", status_code=status.HTTP_201_CREATED, summary="Verificar identidad")
 def verificar_identidad(
