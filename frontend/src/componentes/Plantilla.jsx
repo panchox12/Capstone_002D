@@ -1,7 +1,7 @@
 import { Link, NavLink, Outlet } from 'react-router'
 import { useSesion } from '../sesion/useSesion'
 import { Avatar } from './ui/Avatar'
-import { Boton } from './ui/Boton'
+import { Boton, BotonEnlace } from './ui/Boton'
 import { Logo } from './ui/Logo'
 
 function claseEnlace({ isActive }) {
@@ -45,6 +45,12 @@ export function Plantilla() {
             </>
           )}
         </nav>
+
+        {!usuario && (
+          <BotonEnlace to="/crear-cuenta" tamano="chico">
+            Crear cuenta
+          </BotonEnlace>
+        )}
 
         {usuario && (
           <div className="flex items-center gap-3">
