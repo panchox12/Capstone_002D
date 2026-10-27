@@ -8,8 +8,8 @@ import { Ingresar } from './paginas/Ingresar'
 import { Inicio } from './paginas/Inicio'
 import { MiCuenta } from './paginas/MiCuenta'
 import { NoEncontrada } from './paginas/NoEncontrada'
+import { Tienda } from './paginas/Tienda'
 import { Verificar } from './paginas/Verificar'
-
 
 export default function App() {
   return (
@@ -23,6 +23,7 @@ export default function App() {
         <Route element={<RutaPrivada />}>
           <Route path="mi-cuenta" element={<MiCuenta />} />
           <Route path="verificar" element={<Verificar />} />
+          <Route path="tienda" element={<Tienda />} />
         </Route>
         <Route path="*" element={<NoEncontrada />} />
       </Route>
