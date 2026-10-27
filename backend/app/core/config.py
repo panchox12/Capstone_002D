@@ -41,6 +41,11 @@ class Configuracion(BaseSettings):
     sal_documento: str
     proveedor_identidad: str = "simulado"
 
+    
+    # --- Procesos programados ---
+    # Las pruebas lo apagan.
+    planificador_activo: bool = True
+
     @property
     def es_desarrollo(self) -> bool:
         return self.app_entorno == "desarrollo"
