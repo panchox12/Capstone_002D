@@ -22,7 +22,7 @@ class EstadoHabilidad(str, enum.Enum):
 class HabilidadOfrecida(Base, MezclaTiempos):
     __tablename__ = "habilidad_ofrecida"
     __table_args__ = (
-        # Seccion 3.6: no se puede cobrar cero tokens.
+        #No se puede cobrar cero tokens.
         CheckConstraint("precio_por_bloque > 0", name="ck_habilidad_precio_positivo"),
         # Un usuario ofrece cada tema una sola vez; para cambiar el precio se edita.
         UniqueConstraint("usuario_id", "tema_id", name="uq_habilidad_usuario_tema"),

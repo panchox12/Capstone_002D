@@ -17,6 +17,7 @@ PARAMETROS_INICIALES = [
     ("dias_vencimiento_enseñado", "15", "Dias antes de que venza un token recibido por enseñar"),
     ("duracion_bloque_minutos", "15", "Duracion del bloque de consulta"),
     ("ventana_respuesta_solicitud_minutos", "5", "Minutos para aceptar o rechazar una solicitud"),
+    ("ventana_respuesta_diferida_horas", "24", "Horas para responder una solicitud enviada estando desconectado"),
     ("ventana_conexion_sala_minutos", "5", "Minutos para que ambos se conecten a la sala"),
     ("tiempo_reconexion_segundos", "90", "Segundos otorgados para reconectar tras una caida"),
     ("pausas_maximas_por_sesion", "3", "Pausas maximas permitidas por sesion"),

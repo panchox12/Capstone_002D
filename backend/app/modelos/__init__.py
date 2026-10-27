@@ -17,8 +17,10 @@ from app.modelos.habilidad import EstadoHabilidad, HabilidadOfrecida
 from app.modelos.perfil import PerfilPublico
 from app.modelos.compra import Compra, EstadoCompra
 from app.modelos.video_visto import VideoVisto
+from app.modelos.solicitud import EstadoSolicitud, ModalidadSolicitud, Solicitud
 
 
 __all__ = ["Base", "EstadoCuenta", "Usuario", "ParametroSistema", "EstadoLote", "LoteDeTokens",
            "OrigenLote", "TipoSaldo", "TipoTransaccion", "Transaccion", "EstadoRetencion", "Retencion", "ResultadoVerificacion", "VerificacionIdentidad", "EstadoTema", "Tema",
-           "EstadoHabilidad", "HabilidadOfrecida", "PerfilPublico", "Compra", "EstadoCompra", "VideoVisto"]
+           "EstadoHabilidad", "HabilidadOfrecida", "PerfilPublico", "Compra", "EstadoCompra", "VideoVisto",
+           "EstadoSolicitud", "ModalidadSolicitud", "Solicitud"]
