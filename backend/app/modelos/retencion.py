@@ -26,8 +26,11 @@ class Retencion(Base, MezclaTiempos):
         UUID(as_uuid=True), ForeignKey("usuario.id", ondelete="CASCADE"), nullable=False, index=True
     )
 
-    # Sin FK todavia: las tablas que corresponden a estas columnas aun no existen.
-    solicitud_id: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), nullable=True)
+    # La solicitud que origino esta retencion, si la hay.
+    solicitud_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("solicitud.id"), nullable=True, index=True
+    )
+    # Sin FK todavia: la tabla de sesiones aun no existe.
     sesion_id: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), nullable=True)
 
     cantidad: Mapped[int] = mapped_column(Integer, nullable=False)

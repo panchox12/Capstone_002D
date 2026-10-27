@@ -1,19 +1,24 @@
 """Punto de entrada de la API de Cachai."""
 
-from collections.abc import AsyncIterator
+from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.config import configuracion
-from app.routers import salud, auth, verificacion, temas, habilidades, perfiles, tokens, tienda, presencia
+from app.procesos import planificador
+from app.routers import salud, auth, verificacion, temas, habilidades, perfiles, tokens, tienda, solicitudes, presencia
 
 
 @asynccontextmanager
-async def ciclo_de_vida(_app: FastAPI) -> AsyncIterator[None]:
+async def ciclo_de_vida(_app: FastAPI) -> AsyncGenerator[None, None]:
     """Lo que corre al levantar la API (antes del yield) y al apagarla (despues)."""
+    if configuracion.planificador_activo:
+        planificador.iniciar()
     yield
+    if configuracion.planificador_activo:
+        planificador.detener()
 
 
 app = FastAPI(
@@ -41,8 +46,9 @@ app.include_router(habilidades.router)
 app.include_router(perfiles.router)
 app.include_router(tokens.router)
 app.include_router(tienda.router)
-#app.include_router(solicitudes.router)
+app.include_router(solicitudes.router)
 app.include_router(presencia.router)
+
 
 @app.get("/", tags=["Raiz"])
 def raiz() -> dict:
