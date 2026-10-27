@@ -10,6 +10,7 @@ from sqlalchemy.orm import Session
 from app.core.seguridad import hashear_contrasena
 from app.modelos.usuario import EstadoCuenta, Usuario
 from app.servicios import verificacion as servicio
+from tests.utilidades import cabecera, crear_usuario
  
 JPEG_A = b"\xff\xd8\xff\xe0" + b"documento-a"
 JPEG_B = b"\xff\xd8\xff\xe0" + b"documento-b"
@@ -156,3 +157,14 @@ def test_sin_consentimiento_biometrico_no_se_procesa(
     )
  
     assert respuesta.status_code == 422
+
+def test_el_estado_dice_si_la_identidad_esta_verificada(cliente_db: TestClient, db_prueba: Session) -> None:
+    usuario = crear_usuario(db_prueba)
+
+    antes = cliente_db.get("/verificacion/estado", headers=cabecera(usuario)).json()
+    servicio.verificar(db_prueba, usuario.id, b"\x89PNG documento", b"\x89PNG rostro")
+    despues = cliente_db.get("/verificacion/estado", headers=cabecera(usuario)).json()
+
+    assert antes == {"verificado": False, "fecha": None}
+    assert despues["verificado"] is True
+    assert despues["fecha"] is not None

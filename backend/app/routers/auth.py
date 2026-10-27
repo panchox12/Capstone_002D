@@ -48,7 +48,8 @@ def registrar(datos: UsuarioCrear, db: Session = Depends(obtener_db)) -> Usuario
         minutos_vigencia=MINUTOS_VIGENCIA_CONFIRMACION,
     )
 
-    enlace = f"http://localhost:8000/auth/confirmar/{token_confirmacion}"
+    # El enlace abre una pagina del frontend, que es la que llama a /auth/confirmar.
+    enlace = f"{configuracion.url_frontend}/confirmar/{token_confirmacion}"
 
     if configuracion.es_desarrollo:
         print("\n" + "=" * 70)

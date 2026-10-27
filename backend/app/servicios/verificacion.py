@@ -8,6 +8,7 @@ el nivel de confianza y el hash con sal del documento.
  
 import hashlib
 import uuid
+from datetime import datetime
 from decimal import Decimal
  
 from sqlalchemy import select
@@ -90,7 +91,14 @@ def esta_verificado(db: Session, usuario_id: uuid.UUID) -> bool:
         VerificacionIdentidad.resultado == ResultadoVerificacion.APROBADO,
     )
     return db.execute(sentencia).first() is not None
- 
+
+def fecha_de_aprobacion(db: Session, usuario_id: uuid.UUID) -> datetime | None:
+    """Cuando quedo aprobada la identidad del usuario, o None si todavia no lo esta."""
+    sentencia = select(VerificacionIdentidad.creado_en).where(
+        VerificacionIdentidad.usuario_id == usuario_id,
+        VerificacionIdentidad.resultado == ResultadoVerificacion.APROBADO,
+    )
+    return db.execute(sentencia).scalar_one_or_none()
  
 def _documento_ya_aprobado(db: Session, hash_documento: str) -> bool:
     sentencia = select(VerificacionIdentidad.id).where(

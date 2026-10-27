@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Navigate, useLocation, useNavigate } from 'react-router'
+import { Link, Navigate, useLocation, useNavigate } from 'react-router'
 import { useSesion } from '../sesion/useSesion'
 import { Aviso } from '../componentes/ui/Aviso'
 import { Boton } from '../componentes/ui/Boton'
@@ -71,6 +71,12 @@ export function Ingresar() {
         <Boton type="submit" tamano="grande" disabled={enviando} className="mt-1 w-full">
           {enviando ? 'Ingresando…' : 'Ingresar'}
         </Boton>
+        <p className="text-center text-sm text-tinta/65">
+          ¿Todavía no tienes cuenta?{' '}
+          <Link to="/crear-cuenta" className="font-semibold text-oceano">
+            Crea una
+          </Link>
+        </p>
       </form>
     </Tarjeta>
   )

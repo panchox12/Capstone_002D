@@ -11,3 +11,12 @@ export function iniciarSesion(correo, contrasena) {
 export function obtenerUsuarioActual(token) {
   return pedir('/auth/yo', { token })
 }
+
+export function registrar(datos) {
+  return pedir('/auth/registro', { metodo: 'POST', json: datos })
+}
+
+/** El token viene en el enlace del correo; la API lo valida y activa la cuenta. */
+export function confirmarCorreo(tokenConfirmacion) {
+  return pedir(`/auth/confirmar/${encodeURIComponent(tokenConfirmacion)}`)
+}

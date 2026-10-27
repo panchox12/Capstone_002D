@@ -70,12 +70,18 @@ export function SesionProvider({ children }) {
     setToken(nuevoToken)
   }, [])
 
+    // Vuelve a pedir los datos del usuario, por ejemplo despues de confirmar el correo
+  const refrescar = useCallback(async () => {
+    if (!token) return
+    setUsuario(await obtenerUsuarioActual(token))
+  }, [token])
+
   // Hay token pero todavia no llegan los datos: la sesion se esta cargando
   const cargando = Boolean(token) && usuario === null
 
   const valor = useMemo(
-    () => ({ token, usuario, cargando, ingresar, salir }),
-    [token, usuario, cargando, ingresar, salir],
+    () => ({ token, usuario, cargando, ingresar, salir, refrescar }),
+    [token, usuario, cargando, ingresar, salir, refrescar],
   )
 
   return <ContextoSesion.Provider value={valor}>{children}</ContextoSesion.Provider>
