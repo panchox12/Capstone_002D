@@ -1,6 +1,7 @@
 import { useSesion } from '../sesion/useSesion'
 import { BotonEnlace } from '../componentes/ui/Boton'
 import { Tarjeta } from '../componentes/ui/Tarjeta'
+import { Panel } from './Panel'
 
 const PASOS = [
   {
@@ -9,7 +10,7 @@ const PASOS = [
   },
   {
     titulo: 'Elige a alguien y envíale tu duda',
-    texto: 'Ves su precio antes de pedir. Si no te responde en cinco minutos, tus tokens vuelven solos.',
+    texto: 'Ves su precio antes de pedir. Si no te responde a tiempo, tus tokens vuelven solos.',
   },
   {
     titulo: 'Pagas solo el bloque que usas',
@@ -19,6 +20,11 @@ const PASOS = [
 
 export function Inicio() {
   const { usuario } = useSesion()
+
+  // Con sesion iniciada, el inicio es el panel con el saldo
+  if (usuario) {
+    return <Panel />
+  }
 
   return (
     <section className="grid items-center gap-10 py-6 lg:grid-cols-[1.15fr_1fr]">
@@ -32,11 +38,9 @@ export function Inicio() {
           <BotonEnlace to="/temas" tamano="grande">
             Ver los temas
           </BotonEnlace>
-          {!usuario && (
-            <BotonEnlace to="/ingresar" variante="secundario" tamano="grande">
-              Ingresar
-            </BotonEnlace>
-          )}
+          <BotonEnlace to="/crear-cuenta" variante="secundario" tamano="grande">
+            Crear cuenta
+          </BotonEnlace>
         </div>
       </div>
 
