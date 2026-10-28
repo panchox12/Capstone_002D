@@ -40,6 +40,10 @@ class Configuracion(BaseSettings):
     # --- Verificacion de identidad ---
     sal_documento: str
     proveedor_identidad: str = "simulado"
+    # Rekognition vive en una cuenta AWS distinta de la del despliegue.
+    rekognition_region: str = "us-east-1"
+    rekognition_access_key_id: str = ""
+    rekognition_secret_access_key: str = ""
 
     
     # --- Procesos programados ---
