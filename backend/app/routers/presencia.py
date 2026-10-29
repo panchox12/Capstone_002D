@@ -19,6 +19,7 @@ SIN_REDIS = HTTPException(status.HTTP_503_SERVICE_UNAVAILABLE, "La presencia no 
 @router.post("/latido", status_code=status.HTTP_204_NO_CONTENT, summary="Sigo en linea")
 def latido(
     usuario: Usuario = Depends(usuario_activo),
+    db: Session = Depends(obtener_db),
     r: redis.Redis = Depends(obtener_redis),
 ) -> Response:
     # Quien eligio no aparecer conectado sigue usando Cachai, pero nadie lo ve en linea.
