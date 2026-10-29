@@ -2,10 +2,13 @@
 
 import redis
 from fastapi import APIRouter, Depends, HTTPException, Response, status
+from sqlalchemy.orm import Session
 
 from app.core.redis import obtener_redis
+from app.db.sesion import obtener_db
 from app.dependencias import usuario_activo
 from app.modelos.usuario import Usuario
+from app.servicios import perfiles
 from app.servicios import presencia as servicio
 
 router = APIRouter(prefix="/presencia", tags=["Presencia"])
@@ -18,8 +21,13 @@ def latido(
     usuario: Usuario = Depends(usuario_activo),
     r: redis.Redis = Depends(obtener_redis),
 ) -> Response:
+    # Quien eligio no aparecer conectado sigue usando Cachai, pero nadie lo ve en linea.
+    mostrar = perfiles.preferencias(db, usuario.id).mostrar_en_linea
     try:
-        servicio.marcar_en_linea(r, usuario.id)
+        if mostrar:
+            servicio.marcar_en_linea(r, usuario.id)
+        else:
+            servicio.marcar_desconectado(r, usuario.id)
     except redis.RedisError:
         raise SIN_REDIS from None
     return Response(status_code=status.HTTP_204_NO_CONTENT)

@@ -37,8 +37,27 @@ def _perfil_vacio(usuario_id: uuid.UUID) -> PerfilPublico:
         reputacion_promedio=Decimal("0.00"),
         total_evaluaciones=0,
         consultas_completadas=0,
+        mostrar_en_linea=True,
+        acepta_diferidas=True,
     )
 
+def preferencias(db: Session, usuario_id: uuid.UUID) -> PerfilPublico:
+    # Perfil con las preferencias de presencia; sin fila guardada, las de por defecto.
+    return db.get(PerfilPublico, usuario_id) or _perfil_vacio(usuario_id)
+
+def actualizar_preferencias(
+    db: Session,
+    usuario_id: uuid.UUID,
+    mostrar_en_linea: bool | None = None,
+    acepta_diferidas: bool | None = None,
+) -> PerfilPublico:
+    perfil = obtener_o_crear(db, usuario_id)
+    if mostrar_en_linea is not None:
+        perfil.mostrar_en_linea = mostrar_en_linea
+    if acepta_diferidas is not None:
+        perfil.acepta_diferidas = acepta_diferidas
+    db.flush()
+    return perfil
 
 def obtener_o_crear(db: Session, usuario_id: uuid.UUID) -> PerfilPublico:
     perfil = db.get(PerfilPublico, usuario_id)

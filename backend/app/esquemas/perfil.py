@@ -14,7 +14,13 @@ class PerfilActualizar(BaseModel):
         default=None, min_length=3, max_length=30, pattern=r"^[a-z0-9_-]+$"
     )
 
+class Preferencias(BaseModel):
+    mostrar_en_linea: bool
+    acepta_diferidas: bool
 
+class PreferenciasActualizar(BaseModel):
+    mostrar_en_linea: bool | None = None
+    acepta_diferidas: bool | None = None
 class PerfilPublicoLeer(BaseModel):
     usuario_id: uuid.UUID
     nombre_visible: str
