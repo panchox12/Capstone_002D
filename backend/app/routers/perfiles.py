@@ -8,7 +8,7 @@ from app.core.redis import obtener_redis
 from app.db.sesion import obtener_db
 from app.dependencias import usuario_activo
 from app.esquemas.habilidad import HabilidadLeer
-from app.esquemas.perfil import PerfilActualizar, PerfilPublicoLeer
+from app.esquemas.perfil import PerfilActualizar, PerfilPublicoLeer, Preferencias, PreferenciasActualizar
 from app.modelos.usuario import Usuario
 from app.servicios import habilidades as servicio_habilidades
 from app.servicios import perfiles as servicio
@@ -67,6 +67,32 @@ def actualizar_mio(
         en_linea=presencia.esta_en_linea(r, usuario.id),
     )
 
+@router.get("/mio/preferencias", response_model=Preferencias, summary="Mis preferencias de presencia")
+def ver_preferencias(
+    usuario: Usuario = Depends(usuario_activo),
+    db: Session = Depends(obtener_db),
+) -> Preferencias:
+    perfil = servicio.preferencias(db, usuario.id)
+    return Preferencias(mostrar_en_linea=perfil.mostrar_en_linea, acepta_diferidas=perfil.acepta_diferidas)
+
+@router.patch("/mio/preferencias", response_model=Preferencias, summary="Cambiar mis preferencias de presencia")
+def cambiar_preferencias(
+    datos: PreferenciasActualizar,
+    usuario: Usuario = Depends(usuario_activo),
+    db: Session = Depends(obtener_db),
+    r: redis.Redis = Depends(obtener_redis),
+) -> Preferencias:
+    perfil = servicio.actualizar_preferencias(
+        db, usuario.id, mostrar_en_linea=datos.mostrar_en_linea, acepta_diferidas=datos.acepta_diferidas
+    )
+    db.commit()
+    # Al ocultarse, deja de aparecer en linea de inmediato y no al vencer la marca.
+    if not perfil.mostrar_en_linea:
+        try:
+            presencia.marcar_desconectado(r, usuario.id)
+        except redis.RedisError:
+            pass
+    return Preferencias(mostrar_en_linea=perfil.mostrar_en_linea, acepta_diferidas=perfil.acepta_diferidas)
 
 @router.get("/{identificador}", response_model=PerfilPublicoLeer, summary="Ver perfil publico")
 def ver_perfil(

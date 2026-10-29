@@ -7,7 +7,7 @@ calculadas a partir de las consultas terminadas.
 import uuid
 from decimal import Decimal
 
-from sqlalchemy import CheckConstraint, ForeignKey, Integer, Numeric, String
+from sqlalchemy import Boolean, CheckConstraint, ForeignKey, Integer, Numeric, String, true
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -38,4 +38,12 @@ class PerfilPublico(Base, MezclaTiempos):
     total_evaluaciones: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     consultas_completadas: Mapped[int] = mapped_column(
         Integer, nullable=False, default=0
+    )
+
+    # Preferencias de presencia. Las dos parten activas.
+    mostrar_en_linea: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, default=True, server_default=true()
+    )
+    acepta_diferidas: Mapped[bool] = mapped_column(
+        Boolean, nullable=False, default=True, server_default=true()
     )
