@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { obtenerEstadoVerificacion } from '../api/verificacion'
 import { useSesion } from '../sesion/useSesion'
+import { Preferencias } from '../componentes/ui/Preferencias'
 import { Avatar } from '../componentes/ui/Avatar'
 import { Aviso } from '../componentes/ui/Aviso'
 import { BotonEnlace } from '../componentes/ui/Boton'
@@ -58,6 +59,7 @@ export function MiCuenta() {
           </BotonEnlace>
         </Tarjeta>
       )}
+      {activa && <Preferencias />}
     </section>
   )
 }
