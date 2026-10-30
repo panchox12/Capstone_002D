@@ -45,6 +45,11 @@ class Configuracion(BaseSettings):
     rekognition_access_key_id: str = ""
     rekognition_secret_access_key: str = ""
 
+    # --- Videollamada (LiveKit Cloud) ---
+    livekit_url: str = ""
+    livekit_api_key: str = ""
+    livekit_api_secret: str = ""
+
     
     # --- Procesos programados ---
     # Las pruebas lo apagan.
