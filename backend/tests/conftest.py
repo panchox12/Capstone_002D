@@ -102,3 +102,16 @@ def redis_falso() -> Generator[fakeredis.FakeRedis, None, None]:
     app.dependency_overrides[obtener_redis] = lambda: falso
     yield falso
     app.dependency_overrides.pop(obtener_redis, None)
+
+@pytest.fixture(scope="session")
+def db_motor():
+    """Motor conectado a la base de pruebas. Crea y destruye las tablas una vez por sesion."""
+    motor = create_engine(configuracion.url_bd, pool_pre_ping=True)
+    with motor.connect() as conexion:
+        # Habilita la extension pgvector en la base de datos de pruebas
+        conexion.execute(text("CREATE EXTENSION IF NOT EXISTS vector;"))
+        conexion.commit()
+    Base.metadata.create_all(bind=motor)
+    yield motor
+    Base.metadata.drop_all(bind=motor)
+    motor.dispose()
