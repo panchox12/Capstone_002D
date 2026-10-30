@@ -54,6 +54,9 @@ def _asegurar_base_de_pruebas() -> None:
 def motor_prueba():
     _asegurar_base_de_pruebas()
     motor = create_engine(URL_PRUEBAS, pool_pre_ping=True)
+    # Habilita la extension vector en la base de datos de pruebas (cachai_test)
+    with motor.connect().execution_options(isolation_level="AUTOCOMMIT") as conexion:
+        conexion.execute(text("CREATE EXTENSION IF NOT EXISTS vector;"))
     Base.metadata.create_all(motor)
     yield motor
     Base.metadata.drop_all(motor)

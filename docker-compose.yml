@@ -1,7 +1,8 @@
 services:
 
   postgres:
-    image: postgres:16
+    # PostgreSQL 16 con la extension pgvector, para el buscador semantico.
+    image: pgvector/pgvector:pg16
     container_name: cachai_postgres
     restart: unless-stopped
     environment:
