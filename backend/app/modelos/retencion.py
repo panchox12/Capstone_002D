@@ -30,8 +30,8 @@ class Retencion(Base, MezclaTiempos):
     solicitud_id: Mapped[uuid.UUID | None] = mapped_column(
         UUID(as_uuid=True), ForeignKey("solicitud.id"), nullable=True, index=True
     )
-    # Sin FK todavia: la tabla de sesiones aun no existe.
-    sesion_id: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), nullable=True)
+    # La sesion a la que pasa la retencion cuando el tutor acepta.
+    sesion_id: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), ForeignKey("sesion.id"), nullable=True, index=True)
 
     cantidad: Mapped[int] = mapped_column(Integer, nullable=False)
     estado: Mapped[EstadoRetencion] = mapped_column(
