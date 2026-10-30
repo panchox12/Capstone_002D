@@ -95,3 +95,13 @@ def test_no_retorna_habilidades_pausadas(db_prueba: Session, cliente_db: TestCli
 
     assert respuesta.status_code == 200
     assert respuesta.json() == []
+
+def test_busqueda_endpoint_parametro_semantico(cliente_db: TestClient, datos_busqueda: dict):
+    _ = datos_busqueda
+    # Consulta usando el parametro semantico
+    respuesta = cliente_db.get("/buscador/habilidades?semantica=programacion+en+python")
+
+    assert respuesta.status_code == 200
+    datos = respuesta.json()
+    assert len(datos) > 0
+    assert "tema" in datos[0]

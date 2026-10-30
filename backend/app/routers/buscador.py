@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 
 from app.db.sesion import obtener_db
 from app.esquemas.buscador import ResultadoHabilidad
-from app.servicios import buscador
+from app.servicios import buscador, vectorizador
 
 router = APIRouter(prefix="/buscador", tags=["Buscador"])
 
@@ -17,8 +17,15 @@ router = APIRouter(prefix="/buscador", tags=["Buscador"])
     summary="Buscar habilidades publicadas",
 )
 def buscar_habilidades(
-    q: Annotated[str | None, Query(description="Texto para búsqueda léxica")] = None,
+    q: Annotated[str | None, Query(description="Texto para coincidencia léxica por nombre")] = None,
+    semantica: Annotated[
+        str | None, Query(description="Frase en lenguaje natural para búsqueda semántica")
+    ] = None,
     db: Session = Depends(obtener_db),
 ) -> list[ResultadoHabilidad]:
-    """Retorna las habilidades disponibles que coincidan con el término de búsqueda."""
-    return buscador.buscar_habilidades(db, texto=q)
+    """Busca habilidades activas. Si se especifica 'semantica', calcula el vector de la consulta."""
+    embedding = None
+    if semantica:
+        embedding = vectorizador.vectorizar_texto(semantica)
+
+    return buscador.buscar_habilidades(db, texto=q, embedding=embedding)
