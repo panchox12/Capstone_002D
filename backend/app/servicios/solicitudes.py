@@ -17,7 +17,7 @@ from app.modelos.retencion import Retencion
 from app.modelos.solicitud import EstadoSolicitud, ModalidadSolicitud, Solicitud
 from app.modelos.tema import Tema
 from app.modelos.usuario import EstadoCuenta, Usuario
-from app.servicios import parametros, presencia, tokens
+from app.servicios import parametros, presencia, sesiones, tokens
 
 PARAM_VENTANA_EN_VIVO = "ventana_respuesta_solicitud_minutos"
 PARAM_VENTANA_DIFERIDA = "ventana_respuesta_diferida_horas"
@@ -181,7 +181,8 @@ def aceptar(db: Session, tutor_id: uuid.UUID, solicitud_id: uuid.UUID) -> Solici
     # La diferida retiene recien ahora; si no alcanza, se lanza SaldoInsuficiente.
     if solicitud.modalidad == ModalidadSolicitud.DIFERIDA:
         tokens.retener(db, solicitud.aprendiz_id, solicitud.precio_bloque, solicitud_id=solicitud.id)
-
+    # Con los tokens ya retenidos se abre la sala.
+    sesiones.abrir(db, solicitud)
     db.flush()
     return solicitud
 

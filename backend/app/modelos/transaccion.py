@@ -44,8 +44,9 @@ class Transaccion(Base, MezclaTiempos):
         UUID(as_uuid=True), ForeignKey("retencion.id"), nullable=True, index=True
     )
 
-    # Sin FK todavia: la tabla que corresponde a esta columna aun no existe.
-    sesion_id: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), nullable=True)
+    sesion_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("sesion.id"), nullable=True
+    )
 
     fecha: Mapped["DateTime"] = mapped_column(DateTime(timezone=True), nullable=False)
     saldo_resultante: Mapped[int] = mapped_column(Integer, nullable=False)

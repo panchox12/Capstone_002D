@@ -45,9 +45,14 @@ class Configuracion(BaseSettings):
     rekognition_access_key_id: str = ""
     rekognition_secret_access_key: str = ""
 
-        # --- Buscador semantico ---
+    # --- Buscador semantico ---
     # simulado en pruebas; local para usar el modelo multilingue en el servidor.
     proveedor_embeddings: str = "simulado"
+
+    # --- Videollamada (LiveKit Cloud) ---
+    livekit_url: str = ""
+    livekit_api_key: str = ""
+    livekit_api_secret: str = ""
 
     # --- Procesos programados ---
     # Las pruebas lo apagan.

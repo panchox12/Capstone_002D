@@ -19,9 +19,11 @@ from app.modelos.compra import Compra, EstadoCompra
 from app.modelos.video_visto import VideoVisto
 from app.modelos.solicitud import EstadoSolicitud, ModalidadSolicitud, Solicitud
 from app.modelos.embedding import EmbeddingTema
+from app.modelos.sesion import Bloque, EstadoBloque, EstadoSesion, EventoConexion, Sesion, TipoEventoConexion
 
 
 __all__ = ["Base", "EstadoCuenta", "Usuario", "ParametroSistema", "EstadoLote", "LoteDeTokens",
            "OrigenLote", "TipoSaldo", "TipoTransaccion", "Transaccion", "EstadoRetencion", "Retencion", "ResultadoVerificacion", "VerificacionIdentidad", "EstadoTema", "Tema",
            "EstadoHabilidad", "HabilidadOfrecida", "PerfilPublico", "Compra", "EstadoCompra", "VideoVisto",
-           "EstadoSolicitud", "ModalidadSolicitud", "Solicitud", "EmbeddingTema"]
+           "EstadoSolicitud", "ModalidadSolicitud", "Solicitud", "EmbeddingTema",
+           "Bloque", "EstadoBloque", "EstadoSesion", "EventoConexion", "Sesion", "TipoEventoConexion"]

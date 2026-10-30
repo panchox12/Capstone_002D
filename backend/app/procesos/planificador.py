@@ -9,7 +9,8 @@ from apscheduler.triggers.cron import CronTrigger
 from sqlalchemy.orm import Session
 
 from app.db.sesion import SesionLocal
-from app.servicios import entradas, solicitudes
+from app.servicios import entradas, sesiones, solicitudes
+from app.servicios.sala import obtener_sala
 
 registro = logging.getLogger("uvicorn.error")
 
@@ -46,6 +47,14 @@ def vencer_lotes() -> None:
     _ejecutar("lotes vencidos", entradas.vencer_lotes)
 
 
+def revisar_sesiones() -> None:
+    # Tres revisiones separadas: si una falla, las otras igual se guardan.
+    sala = obtener_sala()
+    _ejecutar("salas sin conexion", lambda db: sesiones.vencer_salas(db, sala))
+    _ejecutar("bloques terminados", lambda db: sesiones.cerrar_bloques_terminados(db, sala))
+    _ejecutar("pagos liberados", sesiones.liberar_pagos)
+
+
 def registrar_tareas() -> None:
     # Cada diez segundos, sin encimarse si una revision tarda.
     planificador.add_job(
@@ -53,6 +62,15 @@ def registrar_tareas() -> None:
         "interval",
         seconds=SEGUNDOS_ENTRE_REVISIONES,
         id="vencer_solicitudes",
+        max_instances=1,
+        coalesce=True,
+        replace_existing=True,
+    )
+    planificador.add_job(
+        revisar_sesiones,
+        "interval",
+        seconds=SEGUNDOS_ENTRE_REVISIONES,
+        id="revisar_sesiones",
         max_instances=1,
         coalesce=True,
         replace_existing=True,
