@@ -7,10 +7,9 @@ El precio es por habilidad, no por usuario: la misma persona puede cobrar
 import enum
 import uuid
  
-from sqlalchemy import CheckConstraint, Column, Enum, ForeignKey, Integer, UniqueConstraint
+from sqlalchemy import CheckConstraint, Enum, ForeignKey, Integer, UniqueConstraint
 from sqlalchemy.dialects.postgresql import UUID
-from sqlalchemy.orm import Mapped, mapped_column, relationship
-from pgvector.sqlalchemy import Vector
+from sqlalchemy.orm import Mapped, mapped_column
  
 from app.db.base import Base, MezclaTiempos
  
@@ -40,6 +39,3 @@ class HabilidadOfrecida(Base, MezclaTiempos):
         nullable=False,
         default=EstadoHabilidad.PUBLICADA,
     )
-    embedding: Mapped[Vector] = mapped_column(Vector(384), nullable=True)
-    usuario = relationship("Usuario", lazy="select")
-    tema = relationship("Tema", lazy="select")
