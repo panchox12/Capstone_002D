@@ -9,7 +9,7 @@ import uuid
  
 from sqlalchemy import CheckConstraint, Column, Enum, ForeignKey, Integer, UniqueConstraint
 from sqlalchemy.dialects.postgresql import UUID
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 from pgvector.sqlalchemy import Vector
  
 from app.db.base import Base, MezclaTiempos
@@ -41,3 +41,5 @@ class HabilidadOfrecida(Base, MezclaTiempos):
         default=EstadoHabilidad.PUBLICADA,
     )
     embedding: Mapped[Vector] = mapped_column(Vector(384), nullable=True)
+    usuario = relationship("Usuario", lazy="select")
+    tema = relationship("Tema", lazy="select")

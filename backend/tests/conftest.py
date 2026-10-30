@@ -54,6 +54,9 @@ def _asegurar_base_de_pruebas() -> None:
 def motor_prueba():
     _asegurar_base_de_pruebas()
     motor = create_engine(URL_PRUEBAS, pool_pre_ping=True)
+    # Habilita la extension vector en la base de datos de pruebas (cachai_test)
+    with motor.connect().execution_options(isolation_level="AUTOCOMMIT") as conexion:
+        conexion.execute(text("CREATE EXTENSION IF NOT EXISTS vector;"))
     Base.metadata.create_all(motor)
     yield motor
     Base.metadata.drop_all(motor)
@@ -102,16 +105,3 @@ def redis_falso() -> Generator[fakeredis.FakeRedis, None, None]:
     app.dependency_overrides[obtener_redis] = lambda: falso
     yield falso
     app.dependency_overrides.pop(obtener_redis, None)
-
-@pytest.fixture(scope="session")
-def db_motor():
-    """Motor conectado a la base de pruebas. Crea y destruye las tablas una vez por sesion."""
-    motor = create_engine(configuracion.url_bd, pool_pre_ping=True)
-    with motor.connect() as conexion:
-        # Habilita la extension pgvector en la base de datos de pruebas
-        conexion.execute(text("CREATE EXTENSION IF NOT EXISTS vector;"))
-        conexion.commit()
-    Base.metadata.create_all(bind=motor)
-    yield motor
-    Base.metadata.drop_all(bind=motor)
-    motor.dispose()
