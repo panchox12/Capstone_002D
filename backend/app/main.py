@@ -8,7 +8,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.config import configuracion
 from app.procesos import planificador
-from app.routers import salud, auth, verificacion, temas, habilidades, perfiles, tokens, tienda, solicitudes, presencia
+from app.routers import salud, auth, verificacion, temas, habilidades, perfiles, tokens, tienda, solicitudes, presencia, sesiones
 
 
 @asynccontextmanager
@@ -48,6 +48,7 @@ app.include_router(tokens.router)
 app.include_router(tienda.router)
 app.include_router(solicitudes.router)
 app.include_router(presencia.router)
+app.include_router(sesiones.router)
 
 
 @app.get("/", tags=["Raiz"])
