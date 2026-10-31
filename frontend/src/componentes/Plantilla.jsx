@@ -31,6 +31,12 @@ export function Plantilla() {
                 <NavLink to="/" end className={claseEnlace}>
                   Inicio
                 </NavLink>
+                <NavLink to="/buscar" className={claseEnlace}>
+                  Buscar
+                </NavLink>
+                <NavLink to="/solicitudes" className={claseEnlace}>
+                  Solicitudes
+                </NavLink>
                 <NavLink to="/temas" className={claseEnlace}>
                   Temas
                 </NavLink>
