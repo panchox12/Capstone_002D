@@ -60,15 +60,7 @@ def publicar(db: Session, usuario_id: uuid.UUID, tema_id: int, precio: int) -> H
     if existente is not None:
         raise HabilidadDuplicada()
  
-# Vectorizar el nombre del tema para búsqueda semántica
-    vector = vectorizador.vectorizar_texto(tema.nombre)
-
-    habilidad = HabilidadOfrecida(
-        usuario_id=usuario_id,
-        tema_id=tema_id,
-        precio_por_bloque=precio,
-        embedding=vector,
-    )
+    habilidad = HabilidadOfrecida(usuario_id=usuario_id, tema_id=tema_id, precio_por_bloque=precio)
     db.add(habilidad)
     db.flush()
     return habilidad
