@@ -1,6 +1,7 @@
 # ---------- Secretos ----------
 .env
 .env.local
+.env.aws
 *.pem
 *.key
 credenciales.json
