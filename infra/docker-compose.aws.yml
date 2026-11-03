@@ -1,0 +1,28 @@
+# Despliegue de prueba en la EC2: la API y Redis.
+# La base de datos es RDS y el frontend vive en S3 detras de CloudFront.
+# Se levanta desde la carpeta infra con: docker compose -f docker-compose.aws.yml up -d --build
+
+services:
+
+  api:
+    build: ../backend
+    image: cachai-api
+    container_name: cachai_api
+    restart: unless-stopped
+    env_file: .env.aws
+    ports:
+      - "8000:8000"
+    depends_on:
+      - redis
+    volumes:
+      # El modelo del buscador se descarga una vez y sobrevive a los reinicios.
+      - modelos:/app/.modelos
+
+  redis:
+    image: redis:7-alpine
+    container_name: cachai_redis
+    restart: unless-stopped
+    # Sin puerto publicado: solo la API llega a Redis, por la red interna de Docker.
+
+volumes:
+  modelos:

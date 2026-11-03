@@ -1,0 +1,8 @@
+# Lo que no debe viajar dentro de la imagen.
+.env
+.venv/
+venv/
+__pycache__/
+.pytest_cache/
+tests/
+*.session.sql
