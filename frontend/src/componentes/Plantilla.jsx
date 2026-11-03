@@ -37,6 +37,9 @@ export function Plantilla() {
                 <NavLink to="/solicitudes" className={claseEnlace}>
                   Solicitudes
                 </NavLink>
+                <NavLink to="/sesiones" className={claseEnlace}>
+                  Sesiones
+                </NavLink>
                 <NavLink to="/temas" className={claseEnlace}>
                   Temas
                 </NavLink>
