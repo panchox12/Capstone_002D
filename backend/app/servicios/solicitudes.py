@@ -1,7 +1,9 @@
 """Solicitudes de sesion: enviar, aceptar, rechazar, cancelar y vencer.
 
 La modalidad la decide el servidor: en vivo si el tutor esta conectado,
-diferida si no. Rechazar, cancelar y vencer devuelven lo que estaba retenido.
+diferida si no. Si el tutor apago "recibir solicitudes estando fuera", la
+diferida no se envia. Tampoco se envia si hay un bloqueo entre los dos.
+Rechazar, cancelar y vencer devuelven lo que estaba retenido.
 Ninguna funcion hace commit: quien la llama confirma todo junto, o nada.
 """
 
@@ -17,7 +19,7 @@ from app.modelos.retencion import Retencion
 from app.modelos.solicitud import EstadoSolicitud, ModalidadSolicitud, Solicitud
 from app.modelos.tema import Tema
 from app.modelos.usuario import EstadoCuenta, Usuario
-from app.servicios import parametros, presencia, sesiones, tokens
+from app.servicios import bloqueos, parametros, perfiles, presencia, sesiones, tokens
 
 PARAM_VENTANA_EN_VIVO = "ventana_respuesta_solicitud_minutos"
 PARAM_VENTANA_DIFERIDA = "ventana_respuesta_diferida_horas"
@@ -33,6 +35,16 @@ class HabilidadNoDisponible(Exception):
 
 
 class SolicitudAPropia(Exception):
+    pass
+
+
+class UsuarioBloqueado(Exception):
+    # Uno de los dos bloqueo al otro.
+    pass
+
+
+class TutorNoRecibeDiferidas(Exception):
+    # El tutor esta desconectado y apago "recibir solicitudes estando fuera".
     pass
 
 
@@ -69,6 +81,8 @@ def enviar(
         raise HabilidadNoDisponible()
     if tutor.id == aprendiz_id:
         raise SolicitudAPropia()
+    if bloqueos.existe_entre(db, aprendiz_id, tutor.id):
+        raise UsuarioBloqueado()
 
     ya_pendiente = db.execute(
         select(Solicitud.id).where(
@@ -88,6 +102,8 @@ def enviar(
         modalidad = ModalidadSolicitud.EN_VIVO
         limite = momento + timedelta(minutes=parametros.obtener_entero(db, PARAM_VENTANA_EN_VIVO))
     else:
+        if not perfiles.preferencias(db, tutor.id).acepta_diferidas:
+            raise TutorNoRecibeDiferidas()
         modalidad = ModalidadSolicitud.DIFERIDA
         limite = momento + timedelta(hours=parametros.obtener_entero(db, PARAM_VENTANA_DIFERIDA))
 

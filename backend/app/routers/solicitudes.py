@@ -57,6 +57,13 @@ def enviar(
         raise HTTPException(status.HTTP_404_NOT_FOUND, "Esa habilidad no esta disponible") from None
     except servicio.SolicitudAPropia:
         raise HTTPException(status.HTTP_422_UNPROCESSABLE_ENTITY, "No puedes pedirte ayuda a ti mismo") from None
+    except servicio.UsuarioBloqueado:
+        raise HTTPException(status.HTTP_403_FORBIDDEN, "No puedes enviarle solicitudes a esta persona") from None
+    except servicio.TutorNoRecibeDiferidas:
+        raise HTTPException(
+            status.HTTP_409_CONFLICT,
+            "Esta persona no esta conectada y no recibe solicitudes mientras esta fuera. Intenta mas tarde",
+        ) from None
     except servicio.SolicitudDuplicada:
         raise HTTPException(
             status.HTTP_409_CONFLICT, "Ya tienes una solicitud esperando respuesta de esta persona"
