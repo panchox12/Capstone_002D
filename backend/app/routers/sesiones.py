@@ -1,4 +1,4 @@
-"""Sesiones: ver las propias, pedir permiso para entrar a la sala y recibir los avisos de LiveKit."""
+"""Sesiones: ver las propias, entrar a la sala, extenderla o terminarla, y recibir los avisos de LiveKit."""
 
 import uuid
 
@@ -13,13 +13,14 @@ from app.esquemas.sesion import PermisoSala, SesionLeer
 from app.esquemas.solicitud import Participante
 from app.modelos.sesion import EstadoSesion
 from app.modelos.usuario import Usuario
+from app.servicios import parametros, tokens
 from app.servicios import sesiones as servicio
-from app.servicios import tokens
 from app.servicios.sala import EventoInvalido, SalaLiveKit, SalaNoConfigurada, obtener_sala
 
 router = APIRouter(prefix="/sesiones", tags=["Sesiones"])
 
 NO_ENCONTRADA = HTTPException(status.HTTP_404_NOT_FOUND, "Sesion no encontrada")
+NO_EN_CURSO = HTTPException(status.HTTP_409_CONFLICT, "La sesion no esta en curso")
 
 
 def _segundos_hasta(momento) -> int:
@@ -32,9 +33,15 @@ def _leer(db: Session, fila: tuple) -> SesionLeer:
     if sesion.estado == EstadoSesion.ESPERANDO:
         para_conectarse = _segundos_hasta(sesion.fecha_limite_conexion)
     restantes_bloque = 0
+    pausa = None
     if sesion.estado == EstadoSesion.EN_CURSO:
         bloque = servicio.bloque_actual(db, sesion.id)
-        restantes_bloque = _segundos_hasta(bloque.hora_termino)
+        pausa = servicio.pausa_abierta(db, sesion.id)
+        if pausa is not None:
+            # Con alguien caido el reloj queda detenido donde estaba.
+            restantes_bloque = max(0, int((bloque.hora_termino - pausa.inicio).total_seconds()))
+        else:
+            restantes_bloque = _segundos_hasta(bloque.hora_termino)
     return SesionLeer(
         id=sesion.id,
         solicitud_id=solicitud.id,
@@ -51,6 +58,12 @@ def _leer(db: Session, fila: tuple) -> SesionLeer:
         motivo_cierre=sesion.motivo_cierre,
         segundos_para_conectarse=para_conectarse,
         segundos_restantes_bloque=restantes_bloque,
+        extension_propuesta_por=sesion.extension_propuesta_por,
+        pausa_activa=pausa is not None,
+        usuario_caido_id=pausa.usuario_id if pausa else None,
+        segundos_para_reconectar=_segundos_hasta(pausa.limite_reconexion) if pausa else 0,
+        pausas_usadas=servicio.contar_pausas(db, sesion.id),
+        pausas_maximas=parametros.obtener_entero(db, servicio.PARAM_PAUSAS_MAXIMAS),
     )
 
 
@@ -90,6 +103,68 @@ def entrar(
     except SalaNoConfigurada:
         raise HTTPException(status.HTTP_503_SERVICE_UNAVAILABLE, "La videollamada no esta disponible") from None
     return PermisoSala(url=configuracion.livekit_url, token=permiso, nombre_sala=sesion.nombre_sala)
+
+
+def _actuar(db: Session, usuario: Usuario, sesion_id: uuid.UUID, accion) -> SesionLeer:
+    # Ejecuta una accion sobre la sesion y traduce los errores a respuestas HTTP.
+    try:
+        accion()
+    except servicio.SesionNoEncontrada:
+        raise NO_ENCONTRADA from None
+    except servicio.SesionNoEnCurso:
+        raise NO_EN_CURSO from None
+    except servicio.ExtensionYaPropuesta:
+        raise HTTPException(status.HTTP_409_CONFLICT, "Ya hay una extension esperando respuesta") from None
+    except servicio.SinExtensionPendiente:
+        raise HTTPException(status.HTTP_409_CONFLICT, "No hay ninguna extension propuesta") from None
+    except servicio.ExtensionPropia:
+        raise HTTPException(status.HTTP_409_CONFLICT, "La extension la tiene que aceptar la otra persona") from None
+    except tokens.SaldoInsuficiente as error:
+        # La propuesta descartada se guarda igual.
+        db.commit()
+        raise HTTPException(
+            status.HTTP_409_CONFLICT,
+            f"Al aprendiz no le alcanza para otro bloque: tiene {error.disponible} tokens y cuesta {error.requerido}",
+        ) from None
+    db.commit()
+    return _leer(db, servicio.detalle(db, usuario.id, sesion_id))
+
+
+@router.post("/{sesion_id}/extension", response_model=SesionLeer, summary="Proponer un bloque mas")
+def proponer_extension(
+    sesion_id: uuid.UUID,
+    usuario: Usuario = Depends(usuario_activo),
+    db: Session = Depends(obtener_db),
+) -> SesionLeer:
+    return _actuar(db, usuario, sesion_id, lambda: servicio.proponer_extension(db, usuario.id, sesion_id))
+
+
+@router.post("/{sesion_id}/extension/aceptar", response_model=SesionLeer, summary="Aceptar la extension propuesta")
+def aceptar_extension(
+    sesion_id: uuid.UUID,
+    usuario: Usuario = Depends(usuario_activo),
+    db: Session = Depends(obtener_db),
+) -> SesionLeer:
+    return _actuar(db, usuario, sesion_id, lambda: servicio.aceptar_extension(db, usuario.id, sesion_id))
+
+
+@router.post("/{sesion_id}/extension/rechazar", response_model=SesionLeer, summary="Rechazar o retirar la extension")
+def rechazar_extension(
+    sesion_id: uuid.UUID,
+    usuario: Usuario = Depends(usuario_activo),
+    db: Session = Depends(obtener_db),
+) -> SesionLeer:
+    return _actuar(db, usuario, sesion_id, lambda: servicio.rechazar_extension(db, usuario.id, sesion_id))
+
+
+@router.post("/{sesion_id}/terminar", response_model=SesionLeer, summary="Terminar la sesion antes de tiempo")
+def terminar(
+    sesion_id: uuid.UUID,
+    usuario: Usuario = Depends(usuario_activo),
+    db: Session = Depends(obtener_db),
+    sala: SalaLiveKit = Depends(obtener_sala),
+) -> SesionLeer:
+    return _actuar(db, usuario, sesion_id, lambda: servicio.terminar_por_participante(db, sala, usuario.id, sesion_id))
 
 
 def _procesar(db: Session, evento) -> None:
