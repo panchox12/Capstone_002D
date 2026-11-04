@@ -1,8 +1,9 @@
-"""Sesiones de videollamada, sus bloques cobrados y los eventos de conexion.
+"""Sesiones de videollamada, sus bloques cobrados, los eventos de conexion y las pausas.
 
 Una sesion nace cuando el tutor acepta una solicitud. El tiempo lo decide el
 servidor con los avisos (webhooks) de LiveKit: el primer bloque empieza recien
 cuando los dos estan conectados, nunca cuando el navegador dice que empezo.
+Si alguien se cae, se abre una pausa y el reloj de la sesion se detiene.
 """
 
 import enum
@@ -26,11 +27,19 @@ class EstadoSesion(str, enum.Enum):
 class EstadoBloque(str, enum.Enum):
     EN_CURSO = "en_curso"
     COMPLETADO = "completado"
+    # Bloque de una extension que nunca alcanzo a empezar: se devuelve.
+    ANULADO = "anulado"
 
 
 class TipoEventoConexion(str, enum.Enum):
     ENTRO = "entro"
     SALIO = "salio"
+
+
+class EstadoPausa(str, enum.Enum):
+    ABIERTA = "abierta"
+    RECONECTADA = "reconectada"
+    VENCIDA = "vencida"
 
 
 def _valores(enum_python):
@@ -60,6 +69,11 @@ class Sesion(Base, MezclaTiempos):
     fecha_cierre: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     bloques_cobrados: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     motivo_cierre: Mapped[str | None] = mapped_column(String(120), nullable=True)
+    # Extension pendiente: quien la propuso y cuando. Se limpia al aceptarla o rechazarla.
+    extension_propuesta_por: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("usuario.id"), nullable=True
+    )
+    fecha_propuesta_extension: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
 
 class Bloque(Base, MezclaTiempos):
@@ -78,6 +92,10 @@ class Bloque(Base, MezclaTiempos):
     # Al abrir el bloque es la hora en que termina; si se cierra antes, la hora real.
     hora_termino: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     tokens_cobrados: Mapped[int] = mapped_column(Integer, nullable=False)
+    # Los tokens con que se pago este bloque. El primero usa la retencion de la solicitud.
+    retencion_id: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("retencion.id"), nullable=True
+    )
     estado: Mapped[EstadoBloque] = mapped_column(
         Enum(EstadoBloque, name="estado_bloque", values_callable=_valores),
         nullable=False,
@@ -98,3 +116,23 @@ class EventoConexion(Base, MezclaTiempos):
     )
     # Hora del servidor de Cachai al recibir el aviso.
     marca_temporal: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+
+
+class PausaSesion(Base, MezclaTiempos):
+    __tablename__ = "pausa_de_sesion"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    sesion_id: Mapped[uuid.UUID] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("sesion.id"), nullable=False, index=True
+    )
+    # Quien se desconecto.
+    usuario_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), ForeignKey("usuario.id"), nullable=False)
+    inicio: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    # Hasta cuando puede volver antes de que la sesion se cierre.
+    limite_reconexion: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    fin: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    estado: Mapped[EstadoPausa] = mapped_column(
+        Enum(EstadoPausa, name="estado_pausa", values_callable=_valores),
+        nullable=False,
+        default=EstadoPausa.ABIERTA,
+    )
