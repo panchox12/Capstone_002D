@@ -48,9 +48,10 @@ def vencer_lotes() -> None:
 
 
 def revisar_sesiones() -> None:
-    # Tres revisiones separadas: si una falla, las otras igual se guardan.
+    # Revisiones separadas: si una falla, las otras igual se guardan.
     sala = obtener_sala()
     _ejecutar("salas sin conexion", lambda db: sesiones.vencer_salas(db, sala))
+    _ejecutar("pausas vencidas", lambda db: sesiones.vencer_pausas(db, sala))
     _ejecutar("bloques terminados", lambda db: sesiones.cerrar_bloques_terminados(db, sala))
     _ejecutar("pagos liberados", sesiones.liberar_pagos)
 
