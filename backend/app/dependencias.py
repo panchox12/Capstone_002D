@@ -9,7 +9,7 @@ from sqlalchemy.orm import Session
 
 from app.core.seguridad import TIPO_ACCESO, decodificar_token
 from app.db.sesion import obtener_db
-from app.modelos.usuario import EstadoCuenta, Usuario
+from app.modelos.usuario import EstadoCuenta, RolUsuario, Usuario
 from app.servicios import usuarios as servicio_usuarios
 from app.servicios import verificacion as servicio_verificacion
 
@@ -71,3 +71,17 @@ def usuario_verificado(
             detail="Debes verificar tu identidad antes de ofrecer o solicitar consultas",
         )
     return usuario
+
+
+def usuario_con_rol(*roles: RolUsuario):
+    #Crea una dependencia que exige alguno de los roles del personal de Cachai.
+
+    def exigir(usuario: Usuario = Depends(usuario_activo)) -> Usuario:
+        if usuario.rol not in roles:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="No tienes permiso para esta seccion",
+            )
+        return usuario
+
+    return exigir
