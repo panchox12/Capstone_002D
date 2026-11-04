@@ -5,7 +5,7 @@ from datetime import datetime
 
 from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator
 
-from app.modelos.usuario import EstadoCuenta
+from app.modelos.usuario import EstadoCuenta, RolUsuario
 
 
 class UsuarioCrear(BaseModel):
@@ -53,6 +53,7 @@ class UsuarioLeer(BaseModel):
     nombre_visible: str
     estado_cuenta: EstadoCuenta
     consentimiento_grabacion: bool
+    rol: RolUsuario
     creado_en: datetime
 
 

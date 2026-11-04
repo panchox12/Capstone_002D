@@ -1,8 +1,9 @@
 """Modelo de usuario.
 
 No existen cuentas separadas de tutor y aprendiz. Un mismo usuario
-busca ayuda y ofrece ayuda desde la misma cuenta.
-Por eso esta tabla no tiene un campo 'rol'.
+busca ayuda y ofrece ayuda desde la misma cuenta. El campo 'rol' solo
+distingue al personal de Cachai: soporte modera reportes y el
+administrador ajusta los parametros de la economia.
 """
 
 import uuid
@@ -28,6 +29,12 @@ class EstadoCuenta(str, EnumPython):
     ACTIVA = "activa"
     SUSPENDIDA = "suspendida"
     ELIMINADA = "eliminada"
+
+
+class RolUsuario(str, EnumPython):
+    USUARIO = "usuario"
+    SOPORTE = "soporte"
+    ADMINISTRADOR = "administrador"
 
 
 class Usuario(Base, MezclaTiempos):
@@ -73,6 +80,23 @@ class Usuario(Base, MezclaTiempos):
     )
 
     ultima_conexion: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True),
+        nullable=True,
+    )
+
+    rol: Mapped[RolUsuario] = mapped_column(
+        EnumSQL(
+            RolUsuario,
+            name="rol_usuario",
+            values_callable=lambda enum: [miembro.value for miembro in enum],
+        ),
+        default=RolUsuario.USUARIO,
+        server_default=RolUsuario.USUARIO.value,
+        nullable=False,
+    )
+
+    # Fin de una suspension temporal. Vacio con la cuenta suspendida significa definitiva.
+    suspendido_hasta: Mapped[datetime | None] = mapped_column(
         DateTime(timezone=True),
         nullable=True,
     )
