@@ -4,7 +4,7 @@ import { obtenerEnviadas, obtenerRecibidas, responderSolicitud } from '../api/so
 import { useSaldo } from '../saldo/useSaldo'
 import { useSesion } from '../sesion/useSesion'
 import { Aviso } from '../componentes/ui/Aviso'
-import { Boton } from '../componentes/ui/Boton'
+import { Boton, BotonEnlace } from '../componentes/ui/Boton'
 import { Ficha } from '../componentes/ui/Ficha'
 import { Tarjeta } from '../componentes/ui/Tarjeta'
 import { TituloPagina } from '../componentes/ui/TituloPagina'
@@ -64,6 +64,11 @@ function TarjetaSolicitud({ solicitud, rol, segundosPasados, alResponder, ocupad
             Rechazar
           </Boton>
         </div>
+      )}
+      {solicitud.estado === 'aceptada' && (
+        <BotonEnlace to="/sesiones" tamano="chico" className="mt-4">
+          Ir a la sala
+        </BotonEnlace>
       )}
       {pendiente && rol === 'aprendiz' && (
         <Boton
