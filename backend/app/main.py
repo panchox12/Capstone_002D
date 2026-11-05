@@ -9,7 +9,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import configuracion
 from app.procesos import planificador
 from app.routers import salud, auth, verificacion, temas, habilidades, perfiles, tokens, tienda, solicitudes, presencia, buscador, sesiones, valoraciones, bloqueos
-from app.routers import reportes, soporte
+from app.routers import reportes, soporte, notificaciones
+
 
 @asynccontextmanager
 async def ciclo_de_vida(_app: FastAPI) -> AsyncGenerator[None, None]:
@@ -54,6 +55,7 @@ app.include_router(valoraciones.router)
 app.include_router(bloqueos.router)
 app.include_router(reportes.router)
 app.include_router(soporte.router)
+app.include_router(notificaciones.router)
 
 
 @app.get("/", tags=["Raiz"])
