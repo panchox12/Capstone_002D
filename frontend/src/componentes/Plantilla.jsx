@@ -49,6 +49,10 @@ export function Plantilla() {
                 <NavLink to="/mi-cuenta" className={claseEnlace}>
                   Mi cuenta
                 </NavLink>
+                {usuario.rol === 'administrador' && (
+                  <NavLink to="/admin" className={claseEnlace}>
+                    Administración
+                  </NavLink>
               </>
             ) : (
               <>
