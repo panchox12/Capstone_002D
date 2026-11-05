@@ -17,7 +17,7 @@ from app.modelos.habilidad import EstadoHabilidad, HabilidadOfrecida
 from app.modelos.perfil import PerfilPublico
 from app.modelos.tema import NIVEL_MAXIMO, EstadoTema, Tema
 from app.modelos.usuario import EstadoCuenta, Usuario
-from app.servicios import embeddings, parametros, presencia
+from app.servicios import bloqueos, embeddings, parametros, presencia
 
 PARAM_MIN_ESTRELLAS = "sesiones_minimas_para_estrellas"
 
@@ -146,6 +146,8 @@ def buscar(
     if not puntajes:
         return modo, []
 
+    # Quien bloqueo a la persona, o fue bloqueado por ella, no aparece.
+    bloqueados = bloqueos.relacionados(db, usuario_id)
     filas = db.execute(
         select(HabilidadOfrecida, Tema, Usuario, PerfilPublico)
         .join(Tema, Tema.id == HabilidadOfrecida.tema_id)
@@ -156,6 +158,7 @@ def buscar(
             HabilidadOfrecida.estado == EstadoHabilidad.PUBLICADA,
             Usuario.estado_cuenta == EstadoCuenta.ACTIVA,
             Usuario.id != usuario_id,
+            Usuario.id.not_in(bloqueados),
         )
     ).all()
 
