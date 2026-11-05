@@ -20,6 +20,7 @@ from sqlalchemy import func, or_, select
 from sqlalchemy.orm import Session, aliased
 
 from app.modelos.habilidad import HabilidadOfrecida
+from app.modelos.moderacion import EstadoReporte, Reporte
 from app.modelos.retencion import EstadoRetencion, Retencion
 from app.modelos.sesion import (
     Bloque,
@@ -538,9 +539,14 @@ def vencer_pausas(db: Session, sala: SalaLiveKit) -> int:
 
 
 def liberar_pagos(db: Session) -> int:
-    # Paga al tutor las sesiones cerradas hace mas del plazo de reporte.
+    # Paga al tutor las sesiones cerradas.
     minutos = parametros.obtener_entero(db, PARAM_RETENCION_POSTERIOR)
     limite = tokens.ahora() - timedelta(minutes=minutos)
+    reportada = (
+        select(Reporte.id)
+        .where(Reporte.sesion_id == Sesion.id, Reporte.estado == EstadoReporte.ABIERTO)
+        .exists()
+    )
     pendientes = db.execute(
         select(Retencion.id, Solicitud.tutor_id)
         .join(Sesion, Sesion.id == Retencion.sesion_id)
@@ -549,6 +555,7 @@ def liberar_pagos(db: Session) -> int:
             Sesion.estado == EstadoSesion.TERMINADA,
             Sesion.fecha_cierre <= limite,
             Retencion.estado == EstadoRetencion.ACTIVA,
+            ~reportada,
         )
     ).all()
 
