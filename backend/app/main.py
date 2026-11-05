@@ -8,7 +8,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.config import configuracion
 from app.procesos import planificador
-from app.routers import salud, auth, verificacion, temas, habilidades, perfiles, tokens, tienda, solicitudes, presencia, buscador, sesiones
+from app.routers import salud, auth, verificacion, temas, habilidades, perfiles, tokens, tienda, solicitudes, presencia, buscador, sesiones, valoraciones, bloqueos
 from app.routers import reportes, soporte
 
 @asynccontextmanager
@@ -50,6 +50,8 @@ app.include_router(solicitudes.router)
 app.include_router(presencia.router)
 app.include_router(buscador.router)
 app.include_router(sesiones.router)
+app.include_router(valoraciones.router)
+app.include_router(bloqueos.router)
 app.include_router(reportes.router)
 app.include_router(soporte.router)
 

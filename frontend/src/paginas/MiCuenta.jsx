@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { obtenerEstadoVerificacion } from '../api/verificacion'
 import { useSesion } from '../sesion/useSesion'
+import { Bloqueados } from '../componentes/Bloqueados'
 import { Preferencias } from '../componentes/Preferencias'
 import { Avatar } from '../componentes/ui/Avatar'
 import { Aviso } from '../componentes/ui/Aviso'
@@ -60,6 +61,7 @@ export function MiCuenta() {
         </Tarjeta>
       )}
       {activa && <Preferencias />}
+      {activa && <Bloqueados />}
     </section>
   )
 }
