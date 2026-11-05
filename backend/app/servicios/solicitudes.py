@@ -19,7 +19,7 @@ from app.modelos.retencion import Retencion
 from app.modelos.solicitud import EstadoSolicitud, ModalidadSolicitud, Solicitud
 from app.modelos.tema import Tema
 from app.modelos.usuario import EstadoCuenta, Usuario
-from app.servicios import bloqueos, parametros, perfiles, presencia, sesiones, tokens
+from app.servicios import bloqueos, notificaciones, parametros, perfiles, presencia, sesiones, tokens
 
 PARAM_VENTANA_EN_VIVO = "ventana_respuesta_solicitud_minutos"
 PARAM_VENTANA_DIFERIDA = "ventana_respuesta_diferida_horas"
@@ -128,6 +128,19 @@ def enviar(
 
     if modalidad == ModalidadSolicitud.EN_VIVO:
         tokens.retener(db, aprendiz_id, precio, solicitud_id=solicitud.id)
+
+    # La diferida tambien va por correo: el tutor no esta conectado.
+    aprendiz = db.get(Usuario, aprendiz_id)
+    tema = db.get(Tema, habilidad.tema_id)
+    notificaciones.avisar(
+        db,
+        tutor.id,
+        "solicitud_recibida",
+        "Nueva solicitud",
+        f"{aprendiz.nombre_visible} te pidio ayuda con {tema.nombre}.",
+        "/solicitudes",
+        por_correo=modalidad == ModalidadSolicitud.DIFERIDA,
+    )
     return solicitud
 
 
@@ -198,7 +211,17 @@ def aceptar(db: Session, tutor_id: uuid.UUID, solicitud_id: uuid.UUID) -> Solici
     if solicitud.modalidad == ModalidadSolicitud.DIFERIDA:
         tokens.retener(db, solicitud.aprendiz_id, solicitud.precio_bloque, solicitud_id=solicitud.id)
     # Con los tokens ya retenidos se abre la sala.
-    sesiones.abrir(db, solicitud)
+    sesion = sesiones.abrir(db, solicitud)
+    tutor = db.get(Usuario, tutor_id)
+    notificaciones.avisar(
+        db,
+        solicitud.aprendiz_id,
+        "solicitud_aceptada",
+        "Te aceptaron la solicitud",
+        f"{tutor.nombre_visible} acepto tu solicitud. Entra a la sala antes de que se acabe el plazo.",
+        f"/sesiones/{sesion.id}",
+        por_correo=solicitud.modalidad == ModalidadSolicitud.DIFERIDA,
+    )
     db.flush()
     return solicitud
 
@@ -212,6 +235,14 @@ def rechazar(db: Session, tutor_id: uuid.UUID, solicitud_id: uuid.UUID) -> Solic
         raise SolicitudVencida()
 
     _cerrar_con_reembolso(db, solicitud, EstadoSolicitud.RECHAZADA, "el tutor rechazo la solicitud")
+    notificaciones.avisar(
+        db,
+        solicitud.aprendiz_id,
+        "solicitud_rechazada",
+        "Solicitud rechazada",
+        "El tutor no puede atenderte esta vez. Tus tokens ya volvieron a tu saldo.",
+        "/buscar",
+    )
     return solicitud
 
 
@@ -248,6 +279,14 @@ def vencer_atrasadas(db: Session) -> int:
 
     for solicitud in atrasadas:
         _cerrar_con_reembolso(db, solicitud, EstadoSolicitud.VENCIDA, "el tutor no respondio a tiempo")
+        notificaciones.avisar(
+            db,
+            solicitud.aprendiz_id,
+            "solicitud_vencida",
+            "Solicitud sin respuesta",
+            "El tutor no respondio a tiempo. Tus tokens ya volvieron a tu saldo: puedes buscar a otra persona.",
+            "/buscar",
+        )
     return len(atrasadas)
 
 

@@ -25,7 +25,7 @@ from app.modelos.solicitud import Solicitud
 from app.modelos.tema import Tema
 from app.modelos.transaccion import TipoTransaccion
 from app.modelos.usuario import EstadoCuenta, Usuario
-from app.servicios import parametros, tokens
+from app.servicios import notificaciones, parametros, tokens
 
 PARAM_PLAZO_REPORTE = "plazo_reporte_horas"
 
@@ -209,6 +209,16 @@ def resolver(
     if fundado and reporte.reportante_id == solicitud.aprendiz_id:
         _compensar_aprendiz(db, sesion, solicitud.aprendiz_id)
 
+    resultado = "fundado" if fundado else "desestimado"
+    notificaciones.avisar(
+        db,
+        reporte.reportante_id,
+        "reporte_resuelto",
+        f"Tu reporte {reporte.folio} fue resuelto",
+        f"Soporte lo considero {resultado}: {reporte.resolucion}",
+        "/sesiones",
+    )
+
     if tipo_sancion is not None:
         fin = momento + timedelta(days=dias_suspension) if tipo_sancion == TipoSancion.TEMPORAL else None
         db.add(
@@ -225,6 +235,16 @@ def resolver(
         sancionado = db.get(Usuario, reporte.reportado_id, with_for_update=True)
         sancionado.estado_cuenta = EstadoCuenta.SUSPENDIDA
         sancionado.suspendido_hasta = fin
+        duracion = f"hasta el {fin:%d-%m-%Y}" if fin else "de forma definitiva"
+        # Va por correo: con la cuenta suspendida no puede entrar a ver la campana.
+        notificaciones.avisar(
+            db,
+            sancionado.id,
+            "sancion",
+            "Tu cuenta fue suspendida",
+            f"Por el reporte {reporte.folio}, tu cuenta queda suspendida {duracion}. Motivo: {reporte.resolucion}",
+            por_correo=True,
+        )
     db.flush()
     return reporte
 

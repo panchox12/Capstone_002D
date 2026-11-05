@@ -35,7 +35,7 @@ from app.modelos.sesion import (
 from app.modelos.solicitud import Solicitud
 from app.modelos.tema import Tema
 from app.modelos.usuario import Usuario
-from app.servicios import parametros, tokens
+from app.servicios import notificaciones, parametros, tokens
 from app.servicios.sala import EventoSala, SalaLiveKit
 
 PARAM_VENTANA_CONEXION = "ventana_conexion_sala_minutos"
@@ -383,6 +383,11 @@ def _cancelar(db: Session, sala: SalaLiveKit, sesion: Sesion, motivo: str) -> No
     for retencion in _retenciones_activas(db, sesion.id):
         tokens.reembolsar(db, retencion.id, motivo)
     _cerrar_sala(sala, sesion)
+    solicitud = db.get(Solicitud, sesion.solicitud_id)
+    for usuario_id in (solicitud.aprendiz_id, solicitud.tutor_id):
+        notificaciones.avisar(
+            db, usuario_id, "sesion_cancelada", "Sesion cancelada", f"La sesion se cancelo: {motivo}.", "/sesiones"
+        )
     db.flush()
 
 
@@ -405,11 +410,15 @@ def _en_curso(db: Session, usuario_id: uuid.UUID, sesion_id: uuid.UUID) -> tuple
 
 
 def proponer_extension(db: Session, usuario_id: uuid.UUID, sesion_id: uuid.UUID) -> Sesion:
-    sesion, _ = _en_curso(db, usuario_id, sesion_id)
+    sesion, solicitud = _en_curso(db, usuario_id, sesion_id)
     if sesion.extension_propuesta_por is not None:
         raise ExtensionYaPropuesta()
     sesion.extension_propuesta_por = usuario_id
     sesion.fecha_propuesta_extension = tokens.ahora()
+    otro = solicitud.tutor_id if usuario_id == solicitud.aprendiz_id else solicitud.aprendiz_id
+    notificaciones.avisar(
+        db, otro, "extension_propuesta", "Te proponen un bloque mas", "Acepta o rechaza en la sala.", f"/sesiones/{sesion.id}"
+    )
     db.flush()
     return sesion
 
