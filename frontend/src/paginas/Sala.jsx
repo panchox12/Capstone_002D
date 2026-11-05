@@ -6,7 +6,9 @@ import { Boton, BotonEnlace } from '../componentes/ui/Boton'
 import { Ficha } from '../componentes/ui/Ficha'
 import { Tarjeta } from '../componentes/ui/Tarjeta'
 import { TituloPagina } from '../componentes/ui/TituloPagina'
+import { BotonBloquear } from '../sala/BotonBloquear'
 import { ESTADOS_SESION, reloj } from '../sala/tiempo'
+import { Valorar } from '../sala/Valorar'
 import { useSaldo } from '../saldo/useSaldo'
 import { useSesion } from '../sesion/useSesion'
 import { plural } from '../utilidades/formato'
@@ -179,9 +181,15 @@ export function Sala() {
             {plural(sesion.bloques_cobrados, 'bloque cobrado', 'bloques cobrados')} ·{' '}
             {plural(sesion.bloques_cobrados * sesion.precio_bloque, 'token', 'tokens')}
           </p>
-          <BotonEnlace to="/sesiones" variante="secundario" tamano="chico" className="mt-4">
-            Volver a mis sesiones
-          </BotonEnlace>
+          {sesion.estado === 'terminada' && sesion.fecha_conexion_ambos && (
+            <Valorar sesionId={sesion.id} nombre={otra.nombre_visible} />
+          )}
+          <BotonBloquear usuarioId={otra.id} nombre={otra.nombre_visible} />
+          <div>
+            <BotonEnlace to="/sesiones" variante="secundario" tamano="chico" className="mt-4">
+              Volver a mis sesiones
+            </BotonEnlace>
+          </div>
         </Tarjeta>
       )}
     </section>
