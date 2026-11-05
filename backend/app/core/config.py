@@ -54,6 +54,16 @@ class Configuracion(BaseSettings):
     livekit_api_key: str = ""
     livekit_api_secret: str = ""
 
+    # --- Cuenta AWS del despliegue: correos con SES y grabaciones en S3 ---
+    aws_region: str = "us-east-2"
+    aws_access_key_id: str = ""
+    aws_secret_access_key: str = ""
+
+    # --- Correo ---
+    # consola en desarrollo (se imprime en la terminal); ses para enviarlo de verdad.
+    correo_proveedor: str = "consola"
+    correo_remitente: str = ""
+
     # --- Procesos programados ---
     # Las pruebas lo apagan.
     planificador_activo: bool = True

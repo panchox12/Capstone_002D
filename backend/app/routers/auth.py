@@ -19,8 +19,8 @@ from app.db.sesion import obtener_db
 from app.dependencias import usuario_actual
 from app.esquemas.usuario import TokenRespuesta, UsuarioCrear, UsuarioLeer
 from app.modelos.usuario import EstadoCuenta, Usuario
+from app.servicios import correo, entradas
 from app.servicios import usuarios as servicio_usuarios
-from app.servicios import entradas
 
 router = APIRouter(prefix="/auth", tags=["Autenticacion"])
 
@@ -51,14 +51,12 @@ def registrar(datos: UsuarioCrear, db: Session = Depends(obtener_db)) -> Usuario
     # El enlace abre una pagina del frontend, que es la que llama a /auth/confirmar.
     enlace = f"{configuracion.url_frontend}/confirmar/{token_confirmacion}"
 
-    if configuracion.es_desarrollo:
-        print("\n" + "=" * 70)
-        print(f"CONFIRMACION DE CORREO PARA {usuario.correo}")
-        print(enlace)
-        print("=" * 70 + "\n")
-    else:
-        # Fase 13: reemplazar por envio real via AWS SES
-        pass
+    # En desarrollo se imprime en la terminal; en el despliegue sale por SES.
+    correo.enviar(
+        usuario.correo,
+        "Confirma tu correo en Cachai",
+        f"Hola {usuario.nombre_visible}:\n\nPara activar tu cuenta abre este enlace (dura 24 horas):\n{enlace}",
+    )
 
     return usuario
 
