@@ -25,7 +25,16 @@ class SesionLeer(BaseModel):
     motivo_cierre: str | None
     # Los calcula el servidor; el navegador solo los muestra.
     segundos_para_conectarse: int
+    # Tiempo pagado que queda, contando las extensiones. Con alguien caido no avanza.
     segundos_restantes_bloque: int
+    # Extension pendiente: quien la propuso. Vacio si no hay ninguna.
+    extension_propuesta_por: uuid.UUID | None
+    # Pausa por caida de conexion.
+    pausa_activa: bool
+    usuario_caido_id: uuid.UUID | None
+    segundos_para_reconectar: int
+    pausas_usadas: int
+    pausas_maximas: int
 
 
 class PermisoSala(BaseModel):
