@@ -9,7 +9,7 @@ from apscheduler.triggers.cron import CronTrigger
 from sqlalchemy.orm import Session
 
 from app.db.sesion import SesionLocal
-from app.servicios import entradas, sesiones, solicitudes
+from app.servicios import entradas, reportes, sesiones, solicitudes
 from app.servicios.sala import obtener_sala
 
 registro = logging.getLogger("uvicorn.error")
@@ -56,6 +56,10 @@ def revisar_sesiones() -> None:
     _ejecutar("pagos liberados", sesiones.liberar_pagos)
 
 
+def reactivar_suspensiones() -> None:
+    _ejecutar("suspensiones vencidas", reportes.reactivar_suspensiones)
+
+
 def registrar_tareas() -> None:
     # Cada diez segundos, sin encimarse si una revision tarda.
     planificador.add_job(
@@ -72,6 +76,16 @@ def registrar_tareas() -> None:
         "interval",
         seconds=SEGUNDOS_ENTRE_REVISIONES,
         id="revisar_sesiones",
+        max_instances=1,
+        coalesce=True,
+        replace_existing=True,
+    )
+    # Cada minuto: las suspensiones temporales no necesitan mas precision.
+    planificador.add_job(
+        reactivar_suspensiones,
+        "interval",
+        minutes=1,
+        id="reactivar_suspensiones",
         max_instances=1,
         coalesce=True,
         replace_existing=True,
