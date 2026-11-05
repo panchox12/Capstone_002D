@@ -34,9 +34,10 @@ export default function App() {
           <Route path="solicitudes" element={<Solicitudes />} />
           <Route path="sesiones" element={<Sesiones />} />
           <Route path="sesiones/:sesionId" element={<Sala />} />
-          <Route element={<SoloPersonal roles={['administrador']} />}></Route>
-          <Route path="admin" element={<Administracion />} />
-        </Route>
+          <Route element={<SoloPersonal roles={['administrador']} />}>
+            <Route path="admin" element={<Administracion />} />
+          </Route>
+          </Route>
         <Route path="*" element={<NoEncontrada />} />
       </Route>
     </Routes>
