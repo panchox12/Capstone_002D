@@ -65,6 +65,18 @@ class ReporteDetalle(ReporteResumen):
     motivo_cierre: str | None
     pago: PagoSesion
     sanciones_previas_reportado: int
+    # grabando, disponible, fallida, borrada; vacio si la sesion no se grabo.
+    grabacion: str | None
+
+
+class EnlaceGrabacion(BaseModel):
+    url: str
+    segundos_vigencia: int
+
+
+class AccesoLeer(BaseModel):
+    soporte: str
+    fecha: datetime
 
 
 class Resolucion(BaseModel):

@@ -1,4 +1,4 @@
-"""Panel de soporte: revisar reportes y resolverlos. Solo para soporte y administradores."""
+"""Panel de soporte: revisar reportes, ver la grabacion y resolverlos. Solo para el personal."""
 
 import uuid
 
@@ -7,11 +7,13 @@ from sqlalchemy.orm import Session
 
 from app.db.sesion import obtener_db
 from app.dependencias import usuario_con_rol
-from app.esquemas.reporte import PagoSesion, ReporteDetalle, ReporteResumen, Resolucion
+from app.esquemas.reporte import AccesoLeer, EnlaceGrabacion, PagoSesion, ReporteDetalle, ReporteResumen, Resolucion
 from app.esquemas.solicitud import Participante
 from app.modelos.moderacion import EstadoReporte
 from app.modelos.usuario import RolUsuario, Usuario
+from app.servicios import grabaciones
 from app.servicios import reportes as servicio
+from app.servicios.almacen import SEGUNDOS_ENLACE, AlmacenS3, obtener_almacen
 
 router = APIRouter(prefix="/soporte", tags=["Soporte"])
 
@@ -37,6 +39,7 @@ def _resumen(fila: tuple) -> dict:
 
 def _detalle(db: Session, fila: tuple) -> ReporteDetalle:
     reporte, sesion, solicitud, _tema, _reportante, reportado = fila
+    grabacion = grabaciones.de_sesion(db, sesion.id)
     return ReporteDetalle(
         **_resumen(fila),
         descripcion=reporte.descripcion,
@@ -51,6 +54,7 @@ def _detalle(db: Session, fila: tuple) -> ReporteDetalle:
         motivo_cierre=sesion.motivo_cierre,
         pago=PagoSesion(**servicio.resumen_de_pago(db, sesion.id)),
         sanciones_previas_reportado=servicio.sanciones_previas(db, reportado.id),
+        grabacion=grabacion.estado.value if grabacion else None,
     )
 
 
@@ -73,6 +77,33 @@ def ver_reporte(
         return _detalle(db, servicio.detalle(db, reporte_id))
     except servicio.ReporteNoEncontrado:
         raise NO_ENCONTRADO from None
+
+
+@router.post("/reportes/{reporte_id}/grabacion", response_model=EnlaceGrabacion, summary="Abrir la grabacion")
+def abrir_grabacion(
+    reporte_id: uuid.UUID,
+    personal: Usuario = Depends(personal_de_soporte),
+    db: Session = Depends(obtener_db),
+    almacen: AlmacenS3 = Depends(obtener_almacen),
+) -> EnlaceGrabacion:
+    # Es POST porque cada apertura queda anotada en la bitacora.
+    try:
+        url = grabaciones.abrir_para_soporte(db, almacen, personal.id, reporte_id)
+    except grabaciones.ReporteSinAcceso:
+        raise HTTPException(status.HTTP_409_CONFLICT, "La grabacion solo se abre con un reporte abierto") from None
+    except grabaciones.GrabacionNoDisponible:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "Esta sesion no tiene una grabacion disponible") from None
+    db.commit()
+    return EnlaceGrabacion(url=url, segundos_vigencia=SEGUNDOS_ENLACE)
+
+
+@router.get("/reportes/{reporte_id}/accesos", response_model=list[AccesoLeer], summary="Quien vio la grabacion")
+def bitacora(
+    reporte_id: uuid.UUID,
+    _personal: Usuario = Depends(personal_de_soporte),
+    db: Session = Depends(obtener_db),
+) -> list[AccesoLeer]:
+    return [AccesoLeer(soporte=nombre, fecha=acceso.fecha) for acceso, nombre in grabaciones.accesos(db, reporte_id)]
 
 
 @router.post("/reportes/{reporte_id}/resolver", response_model=ReporteDetalle, summary="Resolver un reporte")
