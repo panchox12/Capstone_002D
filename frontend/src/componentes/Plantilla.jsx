@@ -53,6 +53,7 @@ export function Plantilla() {
                   <NavLink to="/admin" className={claseEnlace}>
                     Administración
                   </NavLink>
+                )}
               </>
             ) : (
               <>
