@@ -13,7 +13,7 @@ from app.esquemas.sesion import PermisoSala, SesionLeer
 from app.esquemas.solicitud import Participante
 from app.modelos.sesion import EstadoSesion
 from app.modelos.usuario import Usuario
-from app.servicios import parametros, tokens
+from app.servicios import grabaciones, parametros, tokens
 from app.servicios import sesiones as servicio
 from app.servicios.sala import EventoInvalido, SalaLiveKit, SalaNoConfigurada, obtener_sala
 
@@ -167,8 +167,11 @@ def terminar(
     return _actuar(db, usuario, sesion_id, lambda: servicio.terminar_por_participante(db, sala, usuario.id, sesion_id))
 
 
-def _procesar(db: Session, evento) -> None:
-    servicio.registrar_evento(db, evento)
+def _procesar(db: Session, sala: SalaLiveKit, evento) -> None:
+    iniciada = servicio.registrar_evento(db, evento)
+    # Con los dos conectados empieza el cobro y tambien la grabacion.
+    if iniciada is not None:
+        grabaciones.iniciar(db, sala, iniciada)
     db.commit()
 
 
@@ -185,5 +188,5 @@ async def webhook(
     except (EventoInvalido, SalaNoConfigurada):
         raise HTTPException(status.HTTP_401_UNAUTHORIZED, "Aviso no reconocido") from None
 
-    await run_in_threadpool(_procesar, db, evento)
+    await run_in_threadpool(_procesar, db, sala, evento)
     return Response(status_code=status.HTTP_204_NO_CONTENT)
