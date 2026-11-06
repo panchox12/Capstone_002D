@@ -1,6 +1,7 @@
 import { Link, NavLink, Outlet } from 'react-router'
 import { SaldoProvider } from '../saldo/SaldoProvider'
 import { useSesion } from '../sesion/useSesion'
+import { Campana } from './Campana'
 import { PildoraSaldo } from './PildoraSaldo'
 import { Avatar } from './ui/Avatar'
 import { Boton, BotonEnlace } from './ui/Boton'
@@ -49,6 +50,11 @@ export function Plantilla() {
                 <NavLink to="/mi-cuenta" className={claseEnlace}>
                   Mi cuenta
                 </NavLink>
+                {(usuario.rol === 'soporte' || usuario.rol === 'administrador') && (
+                  <NavLink to="/soporte" className={claseEnlace}>
+                    Soporte
+                  </NavLink>
+                )}
                 {usuario.rol === 'administrador' && (
                   <NavLink to="/admin" className={claseEnlace}>
                     Administración
@@ -75,6 +81,7 @@ export function Plantilla() {
 
           {usuario && (
             <div className="flex items-center gap-3">
+              <Campana />
               <PildoraSaldo />
               <Avatar nombre={usuario.nombre_visible} tamano="chico" />
               <Boton variante="secundario" tamano="chico" onClick={salir}>

@@ -12,3 +12,16 @@ export function obtenerSesion(token, sesionId) {
 export function entrarASala(token, sesionId) {
   return pedir(`/sesiones/${sesionId}/entrar`, { metodo: 'POST', token })
 }
+
+export function proponerExtension(token, sesionId) {
+  return pedir(`/sesiones/${sesionId}/extension`, { metodo: 'POST', token })
+}
+ 
+// respuesta: aceptar o rechazar. Rechazar tambien sirve para retirar la propia.
+export function responderExtension(token, sesionId, respuesta) {
+  return pedir(`/sesiones/${sesionId}/extension/${respuesta}`, { metodo: 'POST', token })
+}
+ 
+export function terminarSesion(token, sesionId) {
+  return pedir(`/sesiones/${sesionId}/terminar`, { metodo: 'POST', token })
+}

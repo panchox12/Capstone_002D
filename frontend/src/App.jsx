@@ -3,6 +3,7 @@ import { Plantilla } from './componentes/Plantilla'
 import { RutaPrivada } from './componentes/RutaPrivada'
 import { SoloPersonal } from './componentes/SoloPersonal'
 import { Administracion } from './paginas/Administracion'
+import { CasoSoporte } from './paginas/CasoSoporte'
 import { Buscar } from './paginas/Buscar'
 import { Catalogo } from './paginas/Catalogo'
 import { ConfirmarCorreo } from './paginas/ConfirmarCorreo'
@@ -14,6 +15,7 @@ import { NoEncontrada } from './paginas/NoEncontrada'
 import { Sala } from './paginas/Sala'
 import { Sesiones } from './paginas/Sesiones'
 import { Solicitudes } from './paginas/Solicitudes'
+import { Soporte } from './paginas/Soporte'
 import { Tienda } from './paginas/Tienda'
 import { Verificar } from './paginas/Verificar'
 
@@ -34,6 +36,10 @@ export default function App() {
           <Route path="solicitudes" element={<Solicitudes />} />
           <Route path="sesiones" element={<Sesiones />} />
           <Route path="sesiones/:sesionId" element={<Sala />} />
+          <Route element={<SoloPersonal roles={['soporte', 'administrador']} />}>
+            <Route path="soporte" element={<Soporte />} />
+            <Route path="soporte/:reporteId" element={<CasoSoporte />} />
+          </Route>
           <Route element={<SoloPersonal roles={['administrador']} />}>
             <Route path="admin" element={<Administracion />} />
           </Route>
