@@ -7,6 +7,8 @@ import { Ficha } from '../componentes/ui/Ficha'
 import { Tarjeta } from '../componentes/ui/Tarjeta'
 import { TituloPagina } from '../componentes/ui/TituloPagina'
 import { BotonBloquear } from '../sala/BotonBloquear'
+import { Controles } from '../sala/Controles'
+import { Reportar } from '../sala/Reportar'
 import { ESTADOS_SESION, reloj } from '../sala/tiempo'
 import { Valorar } from '../sala/Valorar'
 import { useSaldo } from '../saldo/useSaldo'
@@ -154,6 +156,15 @@ export function Sala() {
         <Tarjeta className="mb-4">
           <Reloj sesion={sesion} segundosPasados={segundosPasados} />
           <AvisoPausa sesion={sesion} segundosPasados={segundosPasados} usuarioId={usuario?.id} />
+          <Controles
+            sesion={sesion}
+            otra={otra}
+            alCambiar={(nueva) => {
+              setSesion(nueva)
+              setSegundosPasados(0)
+              actualizar()
+            }}
+          />
           {!permiso && (
             <>
               <p className="mt-3 text-xs text-tinta/65">{AVISO_GRABACION}</p>
@@ -184,6 +195,7 @@ export function Sala() {
           {sesion.estado === 'terminada' && sesion.fecha_conexion_ambos && (
             <Valorar sesionId={sesion.id} nombre={otra.nombre_visible} />
           )}
+          {sesion.estado === 'terminada' && <Reportar sesionId={sesion.id} />}
           <BotonBloquear usuarioId={otra.id} nombre={otra.nombre_visible} />
           <div>
             <BotonEnlace to="/sesiones" variante="secundario" tamano="chico" className="mt-4">
