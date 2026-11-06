@@ -3,6 +3,7 @@
 Cachai no transmite video: le pide a LiveKit un permiso para que cada
 participante entre a la sala, y LiveKit le avisa a Cachai (webhook) cuando
 alguien entra o sale. Con esos avisos el servidor lleva la cuenta del tiempo.
+LiveKit tambien graba la sala y deja el archivo en el bucket de S3.
 """
 
 import asyncio
@@ -32,6 +33,9 @@ class EventoSala:
     tipo: str
     sala: str
     identidad: str | None
+    # Solo en los avisos de grabacion: cual termino y si quedo bien.
+    egress_id: str | None = None
+    grabacion_completa: bool = False
 
 
 class SalaLiveKit:
@@ -65,11 +69,36 @@ class SalaLiveKit:
             evento = receptor.receive(cuerpo, token)
         except Exception as error:
             raise EventoInvalido() from error
+        grabacion = evento.egress_info
         return EventoSala(
             tipo=evento.event,
-            sala=evento.room.name,
+            sala=evento.room.name or grabacion.room_name,
             identidad=evento.participant.identity or None,
+            egress_id=grabacion.egress_id or None,
+            grabacion_completa=grabacion.status == api.EgressStatus.EGRESS_COMPLETE,
         )
+
+    def iniciar_grabacion(self, nombre_sala: str, clave_archivo: str) -> str:
+        # Graba la sala completa en MP4 y la sube al bucket. Devuelve el id de la grabacion.
+        self._exigir_configuracion()
+        destino = api.S3Upload(
+            access_key=configuracion.aws_access_key_id,
+            secret=configuracion.aws_secret_access_key,
+            region=configuracion.aws_region,
+            bucket=configuracion.grabacion_bucket,
+        )
+        pedido = api.RoomCompositeEgressRequest(
+            room_name=nombre_sala,
+            layout="grid",
+            file_outputs=[api.EncodedFileOutput(file_type=api.EncodedFileType.MP4, filepath=clave_archivo, s3=destino)],
+        )
+
+        async def _iniciar() -> str:
+            async with api.LiveKitAPI(self.url, self.llave, self.secreto) as cliente:
+                info = await cliente.egress.start_room_composite_egress(pedido)
+                return info.egress_id
+
+        return asyncio.run(_iniciar())
 
     def cerrar(self, nombre_sala: str) -> None:
         # Saca a todos de la sala. Lo usa el planificador al terminar o cancelar una sesion.

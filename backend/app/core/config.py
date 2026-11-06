@@ -64,6 +64,10 @@ class Configuracion(BaseSettings):
     correo_proveedor: str = "consola"
     correo_remitente: str = ""
 
+    # --- Grabaciones (LiveKit las sube a este bucket de S3) ---
+    grabacion_activa: bool = False
+    grabacion_bucket: str = ""
+
     # --- Procesos programados ---
     # Las pruebas lo apagan.
     planificador_activo: bool = True

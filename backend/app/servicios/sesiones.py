@@ -35,7 +35,7 @@ from app.modelos.sesion import (
 from app.modelos.solicitud import Solicitud
 from app.modelos.tema import Tema
 from app.modelos.usuario import Usuario
-from app.servicios import notificaciones, parametros, tokens
+from app.servicios import grabaciones, notificaciones, parametros, tokens
 from app.servicios.sala import EventoSala, SalaLiveKit
 
 PARAM_VENTANA_CONEXION = "ventana_conexion_sala_minutos"
@@ -188,29 +188,33 @@ def _iniciar(db: Session, sesion: Sesion, solicitud: Solicitud) -> None:
     db.flush()
 
 
-def registrar_evento(db: Session, evento: EventoSala) -> None:
-    # Procesa un aviso de LiveKit. Los avisos de salas ajenas se ignoran.
+def registrar_evento(db: Session, evento: EventoSala) -> Sesion | None:
+    # Procesa un aviso de LiveKit. Devuelve la sesion si este aviso la hizo empezar.
+    if evento.tipo == "egress_ended" and evento.egress_id:
+        grabaciones.registrar_termino(db, evento.egress_id, evento.grabacion_completa)
+        return None
+
     sesion = db.execute(
         select(Sesion).where(Sesion.nombre_sala == evento.sala).with_for_update()
     ).scalar_one_or_none()
     if sesion is None or sesion.estado not in (EstadoSesion.ESPERANDO, EstadoSesion.EN_CURSO):
-        return
+        return None
 
     if evento.tipo == "room_finished":
         if sesion.estado == EstadoSesion.EN_CURSO:
             terminar(db, sesion, "la sala se cerro")
-        return
+        return None
 
     tipo = TIPOS_DE_CONEXION.get(evento.tipo)
     if tipo is None or evento.identidad is None:
-        return
+        return None
     try:
         usuario_id = uuid.UUID(evento.identidad)
     except ValueError:
-        return
+        return None
     solicitud = db.get(Solicitud, sesion.solicitud_id)
     if usuario_id not in (solicitud.aprendiz_id, solicitud.tutor_id):
-        return
+        return None
 
     db.add(
         EventoConexion(
@@ -230,12 +234,14 @@ def registrar_evento(db: Session, evento: EventoSala) -> None:
             pausa = pausa_abierta(db, sesion.id, usuario_id)
             if pausa is not None:
                 _cerrar_pausa(db, sesion, pausa)
-        return
+        return None
 
     # Si alguien llega despues del plazo, el planificador cancela la sesion.
     a_tiempo = tokens.ahora() < sesion.fecha_limite_conexion
     if tipo == TipoEventoConexion.ENTRO and a_tiempo and _ambos_presentes(db, sesion, solicitud):
         _iniciar(db, sesion, solicitud)
+        return sesion
+    return None
 
 
 # ---------------------------------------------------------------------------
@@ -364,6 +370,7 @@ def terminar(db: Session, sesion: Sesion, motivo: str) -> None:
             # El bloque empezado se cobra completo; solo se anota la hora real de termino.
             bloque.estado = EstadoBloque.COMPLETADO
             bloque.hora_termino = min(bloque.hora_termino, momento)
+    grabaciones.fijar_vencimiento(db, sesion)
     db.flush()
 
 

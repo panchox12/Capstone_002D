@@ -9,7 +9,8 @@ from apscheduler.triggers.cron import CronTrigger
 from sqlalchemy.orm import Session
 
 from app.db.sesion import SesionLocal
-from app.servicios import entradas, reportes, sesiones, solicitudes
+from app.servicios import entradas, grabaciones, reportes, sesiones, solicitudes
+from app.servicios.almacen import obtener_almacen
 from app.servicios.sala import obtener_sala
 
 registro = logging.getLogger("uvicorn.error")
@@ -60,6 +61,10 @@ def reactivar_suspensiones() -> None:
     _ejecutar("suspensiones vencidas", reportes.reactivar_suspensiones)
 
 
+def borrar_grabaciones() -> None:
+    _ejecutar("grabaciones borradas", lambda db: grabaciones.borrar_vencidas(db, obtener_almacen()))
+
+
 def registrar_tareas() -> None:
     # Cada diez segundos, sin encimarse si una revision tarda.
     planificador.add_job(
@@ -86,6 +91,15 @@ def registrar_tareas() -> None:
         "interval",
         minutes=1,
         id="reactivar_suspensiones",
+        max_instances=1,
+        coalesce=True,
+        replace_existing=True,
+    )
+    planificador.add_job(
+        borrar_grabaciones,
+        "interval",
+        minutes=10,
+        id="borrar_grabaciones",
         max_instances=1,
         coalesce=True,
         replace_existing=True,
