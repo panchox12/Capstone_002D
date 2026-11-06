@@ -54,6 +54,10 @@ export async function pedir(ruta, { metodo = 'GET', json, formulario, token } = 
     throw new ErrorApi(0, 'No se pudo conectar con la API. Revisa que el backend esté corriendo.')
   }
 
+if (respuesta.status === 204) {
+    return null
+  }
+
   const esJson = (respuesta.headers.get('content-type') ?? '').includes('application/json')
   const datos = esJson ? await respuesta.json() : null
 
@@ -64,5 +68,6 @@ export async function pedir(ruta, { metodo = 'GET', json, formulario, token } = 
     }
     throw new ErrorApi(respuesta.status, mensajeDeError(datos, respuesta.status))
   }
+  
   return datos
 }
