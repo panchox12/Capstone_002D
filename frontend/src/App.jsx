@@ -1,6 +1,8 @@
 import { Route, Routes } from 'react-router'
 import { Plantilla } from './componentes/Plantilla'
 import { RutaPrivada } from './componentes/RutaPrivada'
+import { SoloPersonal } from './componentes/SoloPersonal'
+import { Administracion } from './paginas/Administracion'
 import { Buscar } from './paginas/Buscar'
 import { Catalogo } from './paginas/Catalogo'
 import { ConfirmarCorreo } from './paginas/ConfirmarCorreo'
@@ -32,7 +34,10 @@ export default function App() {
           <Route path="solicitudes" element={<Solicitudes />} />
           <Route path="sesiones" element={<Sesiones />} />
           <Route path="sesiones/:sesionId" element={<Sala />} />
-        </Route>
+          <Route element={<SoloPersonal roles={['administrador']} />}>
+            <Route path="admin" element={<Administracion />} />
+          </Route>
+          </Route>
         <Route path="*" element={<NoEncontrada />} />
       </Route>
     </Routes>

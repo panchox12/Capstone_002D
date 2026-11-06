@@ -10,6 +10,7 @@ from app.core.config import configuracion
 from app.procesos import planificador
 from app.routers import salud, auth, verificacion, temas, habilidades, perfiles, tokens, tienda, solicitudes, presencia, buscador, sesiones, valoraciones, bloqueos
 from app.routers import reportes, soporte, notificaciones
+from app.routers import administracion
 
 
 @asynccontextmanager
@@ -56,6 +57,7 @@ app.include_router(bloqueos.router)
 app.include_router(reportes.router)
 app.include_router(soporte.router)
 app.include_router(notificaciones.router)
+app.include_router(administracion.router)
 
 
 @app.get("/", tags=["Raiz"])
