@@ -99,8 +99,8 @@ export function Panel() {
           <p className="mb-3.5 text-[12.5px] opacity-90">
             Publica una habilidad con tu precio y empieza a recibir tokens.
           </p>
-          <BotonEnlace to="/temas" variante="invertido" tamano="chico">
-            Ver los temas
+          <BotonEnlace to="/mi-cuenta" variante="invertido" tamano="chico">
+            Publicar habilidad
           </BotonEnlace>
         </Tarjeta>
         <Tarjeta variante="gris" className="text-xs leading-relaxed text-tinta/65">
