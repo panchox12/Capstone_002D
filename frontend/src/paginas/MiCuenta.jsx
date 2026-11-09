@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react'
 import { obtenerEstadoVerificacion } from '../api/verificacion'
 import { useSesion } from '../sesion/useSesion'
 import { Bloqueados } from '../componentes/Bloqueados'
+import { MiPerfil } from '../componentes/MiPerfil'
+import { MisHabilidades } from '../componentes/MisHabilidades'
 import { Preferencias } from '../componentes/Preferencias'
 import { Avatar } from '../componentes/ui/Avatar'
 import { Aviso } from '../componentes/ui/Aviso'
@@ -60,6 +62,8 @@ export function MiCuenta() {
           </BotonEnlace>
         </Tarjeta>
       )}
+      {activa && <MiPerfil />}
+      {verificacion && <MisHabilidades verificado={verificacion.verificado} />}
       {activa && <Preferencias />}
       {activa && <Bloqueados />}
     </section>

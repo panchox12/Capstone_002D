@@ -1,7 +1,8 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router'
+import { Link, useNavigate } from 'react-router'
 import { buscarEspecialistas } from '../api/busqueda'
 import { enviarSolicitud } from '../api/solicitudes'
+import { FormularioSolicitud } from '../componentes/FormularioSolicitud'
 import { useSaldo } from '../saldo/useSaldo'
 import { useSesion } from '../sesion/useSesion'
 import { Avatar } from '../componentes/ui/Avatar'
@@ -70,13 +71,17 @@ function FormularioSolicitud({ resultado, dudaInicial, alEnviar }) {
 
 function TarjetaResultado({ resultado, duda, alEnviar }) {
   const [abierta, setAbierta] = useState(false)
-
+ 
   return (
     <Tarjeta como="article" className="p-5">
       <div className="flex flex-wrap items-center gap-3">
         <Avatar nombre={resultado.tutor_nombre} />
         <div className="mr-auto">
-          <h2 className="text-[15px]">{resultado.tutor_nombre}</h2>
+          <h2 className="text-[15px]">
+            <Link to={`/u/${resultado.tutor_id}`} className="hover:text-oceano-oscuro hover:underline">
+              {resultado.tutor_nombre}
+            </Link>
+          </h2>
           <Reputacion resultado={resultado} />
         </div>
         <Ficha variante={resultado.en_linea ? 'celeste' : 'gris'}>
@@ -98,7 +103,9 @@ function TarjetaResultado({ resultado, duda, alEnviar }) {
       </div>
       {abierta && (
         <FormularioSolicitud
-          resultado={resultado}
+          tutorNombre={resultado.tutor_nombre}
+          enLinea={resultado.en_linea}
+          precio={resultado.precio_por_bloque}
           dudaInicial={duda}
           alEnviar={(mensaje) => alEnviar(resultado, mensaje)}
         />
@@ -133,7 +140,7 @@ export function Buscar() {
     }
   }
 
-  async function pedirAyuda(resultado, mensaje) {
+async function pedirAyuda(resultado, mensaje) {
     const solicitud = await enviarSolicitud(token, resultado.habilidad_id, mensaje)
     actualizar()
     const aviso =
@@ -142,14 +149,14 @@ export function Buscar() {
         : `Le enviaste tu duda a ${resultado.tutor_nombre}. Te avisamos cuando responda.`
     navegar('/solicitudes', { state: { aviso } })
   }
-
+ 
   return (
     <section className="max-w-3xl">
       <TituloPagina
         titulo="¿Qué duda tienes?"
         bajada="Escríbela con tus palabras, como se la contarías a un amigo. No necesitas saber cómo se llama el tema."
       />
-
+ 
       <form onSubmit={buscar} className="grid gap-3">
         <label className={claseEtiqueta}>
           Tu duda
@@ -176,19 +183,19 @@ export function Buscar() {
           </Boton>
         </div>
       </form>
-
+ 
       {error && (
         <Aviso tipo="error" className="mt-4">
           {error}
         </Aviso>
       )}
-
+ 
       {resultados && resultados.length === 0 && (
         <Aviso tipo="neutro" className="mt-6">
           No encontramos a nadie para esa duda. Prueba contándola de otra forma.
         </Aviso>
       )}
-
+ 
       {resultados && resultados.length > 0 && (
         <div className="mt-6 grid gap-3.5">
           {resultados.map((resultado) => (
