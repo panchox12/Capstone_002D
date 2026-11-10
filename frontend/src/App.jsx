@@ -12,6 +12,7 @@ import { Ingresar } from './paginas/Ingresar'
 import { Inicio } from './paginas/Inicio'
 import { MiCuenta } from './paginas/MiCuenta'
 import { NoEncontrada } from './paginas/NoEncontrada'
+import { PerfilPublico } from './paginas/PerfilPublico'
 import { Sala } from './paginas/Sala'
 import { Sesiones } from './paginas/Sesiones'
 import { Solicitudes } from './paginas/Solicitudes'
@@ -28,6 +29,7 @@ export default function App() {
         <Route path="ingresar" element={<Ingresar />} />
         <Route path="crear-cuenta" element={<CrearCuenta />} />
         <Route path="confirmar/:token" element={<ConfirmarCorreo />} />
+        <Route path="u/:identificador" element={<PerfilPublico />} />
         <Route element={<RutaPrivada />}>
           <Route path="mi-cuenta" element={<MiCuenta />} />
           <Route path="verificar" element={<Verificar />} />

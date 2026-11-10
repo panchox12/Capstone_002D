@@ -1,7 +1,8 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router'
+import { Link, useNavigate } from 'react-router'
 import { buscarEspecialistas } from '../api/busqueda'
 import { enviarSolicitud } from '../api/solicitudes'
+import { FormularioSolicitud } from '../componentes/FormularioSolicitud'
 import { useSaldo } from '../saldo/useSaldo'
 import { useSesion } from '../sesion/useSesion'
 import { Avatar } from '../componentes/ui/Avatar'
@@ -12,9 +13,7 @@ import { Ficha } from '../componentes/ui/Ficha'
 import { Tarjeta } from '../componentes/ui/Tarjeta'
 import { TituloPagina } from '../componentes/ui/TituloPagina'
 import { plural } from '../utilidades/formato'
-
-const LARGO_MENSAJE = 280
-
+ 
 function Reputacion({ resultado }) {
   if (resultado.reputacion_promedio === null) {
     return <span className="text-xs text-tinta/65">Usuario nuevo</span>
@@ -25,58 +24,20 @@ function Reputacion({ resultado }) {
     </span>
   )
 }
-
-function FormularioSolicitud({ resultado, dudaInicial, alEnviar }) {
-  const [mensaje, setMensaje] = useState(dudaInicial.slice(0, LARGO_MENSAJE))
-  const [enviando, setEnviando] = useState(false)
-  const [error, setError] = useState(null)
-
-  async function enviar(evento) {
-    evento.preventDefault()
-    setError(null)
-    setEnviando(true)
-    try {
-      await alEnviar(mensaje.trim())
-    } catch (e) {
-      setError(e.message)
-      setEnviando(false)
-    }
-  }
-
-  return (
-    <form onSubmit={enviar} className="mt-4 grid gap-3 border-t border-tinta/10 pt-4">
-      <label className={claseEtiqueta}>
-        Mensaje para {resultado.tutor_nombre}
-        <textarea
-          value={mensaje}
-          onChange={(e) => setMensaje(e.target.value)}
-          maxLength={LARGO_MENSAJE}
-          rows={3}
-          className={claseCampo}
-        />
-      </label>
-      <p className="text-xs text-tinta/65">
-        {resultado.en_linea
-          ? `Está en línea: tiene 5 minutos para responder. Al enviar se retienen ${plural(resultado.precio_por_bloque, 'token', 'tokens')}.`
-          : 'Está desconectado: tiene hasta 24 horas para responder. Tus tokens se retienen solo si acepta.'}
-      </p>
-      {error && <Aviso tipo="error">{error}</Aviso>}
-      <Boton type="submit" tamano="chico" disabled={enviando || !mensaje.trim()} className="justify-self-start">
-        {enviando ? 'Enviando…' : 'Enviar solicitud'}
-      </Boton>
-    </form>
-  )
-}
-
+ 
 function TarjetaResultado({ resultado, duda, alEnviar }) {
   const [abierta, setAbierta] = useState(false)
-
+ 
   return (
     <Tarjeta como="article" className="p-5">
       <div className="flex flex-wrap items-center gap-3">
         <Avatar nombre={resultado.tutor_nombre} />
         <div className="mr-auto">
-          <h2 className="text-[15px]">{resultado.tutor_nombre}</h2>
+          <h2 className="text-[15px]">
+            <Link to={`/u/${resultado.tutor_id}`} className="hover:text-oceano-oscuro hover:underline">
+              {resultado.tutor_nombre}
+            </Link>
+          </h2>
           <Reputacion resultado={resultado} />
         </div>
         <Ficha variante={resultado.en_linea ? 'celeste' : 'gris'}>
@@ -98,7 +59,9 @@ function TarjetaResultado({ resultado, duda, alEnviar }) {
       </div>
       {abierta && (
         <FormularioSolicitud
-          resultado={resultado}
+          tutorNombre={resultado.tutor_nombre}
+          enLinea={resultado.en_linea}
+          precio={resultado.precio_por_bloque}
           dudaInicial={duda}
           alEnviar={(mensaje) => alEnviar(resultado, mensaje)}
         />
@@ -106,7 +69,7 @@ function TarjetaResultado({ resultado, duda, alEnviar }) {
     </Tarjeta>
   )
 }
-
+ 
 export function Buscar() {
   const { token } = useSesion()
   const { actualizar } = useSaldo()
@@ -117,7 +80,7 @@ export function Buscar() {
   const [buscada, setBuscada] = useState('')
   const [cargando, setCargando] = useState(false)
   const [error, setError] = useState(null)
-
+ 
   async function buscar(evento) {
     evento.preventDefault()
     setError(null)
@@ -132,7 +95,7 @@ export function Buscar() {
       setCargando(false)
     }
   }
-
+ 
   async function pedirAyuda(resultado, mensaje) {
     const solicitud = await enviarSolicitud(token, resultado.habilidad_id, mensaje)
     actualizar()
@@ -142,14 +105,14 @@ export function Buscar() {
         : `Le enviaste tu duda a ${resultado.tutor_nombre}. Te avisamos cuando responda.`
     navegar('/solicitudes', { state: { aviso } })
   }
-
+ 
   return (
     <section className="max-w-3xl">
       <TituloPagina
         titulo="¿Qué duda tienes?"
         bajada="Escríbela con tus palabras, como se la contarías a un amigo. No necesitas saber cómo se llama el tema."
       />
-
+ 
       <form onSubmit={buscar} className="grid gap-3">
         <label className={claseEtiqueta}>
           Tu duda
@@ -176,19 +139,19 @@ export function Buscar() {
           </Boton>
         </div>
       </form>
-
+ 
       {error && (
         <Aviso tipo="error" className="mt-4">
           {error}
         </Aviso>
       )}
-
+ 
       {resultados && resultados.length === 0 && (
         <Aviso tipo="neutro" className="mt-6">
           No encontramos a nadie para esa duda. Prueba contándola de otra forma.
         </Aviso>
       )}
-
+ 
       {resultados && resultados.length > 0 && (
         <div className="mt-6 grid gap-3.5">
           {resultados.map((resultado) => (
