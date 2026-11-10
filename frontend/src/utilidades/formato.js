@@ -12,6 +12,10 @@ export function fechaCorta(iso) {
   return new Date(iso).toLocaleDateString('es-CL', { day: 'numeric', month: 'short', year: 'numeric' })
 }
 
+export function fechaYHora(iso) {
+  return new Date(iso).toLocaleString('es-CL', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })
+}
+
 const MILISEGUNDOS_POR_DIA = 24 * 60 * 60 * 1000
 
 // Redondea hacia arriba: si vence en 2 horas, cuenta 1 dia.

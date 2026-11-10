@@ -1,31 +1,36 @@
 """Motor de tokens: saldo, entradas, retenciones, liberaciones y reembolsos.
- 
+
 Reglas que este modulo garantiza:
 - El saldo nunca se guarda: se calcula sumando lo que queda en lotes vigentes.
 - Se consume primero el lote que vence antes; en empate, el gratuito.
 - Todo movimiento queda registrado en Transaccion, que es de solo agregado.
 - Ninguna funcion hace commit: quien la llama confirma todo junto, o nada.
 """
- 
+
 import uuid
 from datetime import datetime, timedelta, timezone
- 
+
 from sqlalchemy import case, func, select
-from sqlalchemy.orm import Session
- 
+from sqlalchemy.orm import Session, aliased
+
+from app.modelos.habilidad import HabilidadOfrecida
 from app.modelos.lote_tokens import EstadoLote, LoteDeTokens, OrigenLote, TipoSaldo
 from app.modelos.retencion import EstadoRetencion, Retencion
+from app.modelos.sesion import Sesion
+from app.modelos.solicitud import Solicitud
+from app.modelos.tema import Tema
 from app.modelos.transaccion import TipoTransaccion, Transaccion
+from app.modelos.usuario import Usuario
 from app.servicios import parametros
- 
+
 # ---------------------------------------------------------------------------
 # Nombres de parametros, en un solo lugar para no escribirlos a mano dos veces
 # ---------------------------------------------------------------------------
- 
+
 PARAM_DIAS_GRATIS = "dias_vencimiento_gratis"
 PARAM_DIAS_COMPRADO = "dias_vencimiento_comprado"
 PARAM_DIAS_ENSENADO = "dias_vencimiento_enseñado"
- 
+
 _PARAM_DIAS_POR_ORIGEN = {
     OrigenLote.ENTREGA_SEMANAL: PARAM_DIAS_GRATIS,
     OrigenLote.VIDEO: PARAM_DIAS_GRATIS,
@@ -33,7 +38,7 @@ _PARAM_DIAS_POR_ORIGEN = {
     OrigenLote.PAGO_POR_ENSENAR: PARAM_DIAS_ENSENADO,
     OrigenLote.COMPENSACION: PARAM_DIAS_COMPRADO,
 }
- 
+
 _TIPO_TRANSACCION_POR_ORIGEN = {
     OrigenLote.COMPRA: TipoTransaccion.COMPRA,
     OrigenLote.COMPENSACION: TipoTransaccion.COMPENSACION,
@@ -42,30 +47,30 @@ _TIPO_TRANSACCION_POR_ORIGEN = {
 # ---------------------------------------------------------------------------
 # Errores propios del motor
 # ---------------------------------------------------------------------------
- 
- 
+
+
 class SaldoInsuficiente(Exception):
     #El usuario no tiene tokens vigentes suficientes.
- 
+
     def __init__(self, disponible: int, requerido: int):
         super().__init__(f"Saldo insuficiente: disponible {disponible}, requerido {requerido}")
         self.disponible = disponible
         self.requerido = requerido
- 
- 
+
+
 class RetencionNoActiva(Exception):
     """La retencion no existe, o ya fue liberada o reembolsada."""
 
 # ---------------------------------------------------------------------------
 # Reloj y vigencias
 # ---------------------------------------------------------------------------
- 
- 
+
+
 def ahora() -> datetime:
     #Unico reloj del motor: el del servidor, en UTC. Nunca el del navegador.
     return datetime.now(timezone.utc)
- 
- 
+
+
 def dias_de_vigencia(db: Session, origen: OrigenLote) -> int:
     #Cuantos dias dura un lote segun de donde vinieron sus tokens.
     return parametros.obtener_entero(db, _PARAM_DIAS_POR_ORIGEN[origen])
@@ -73,15 +78,15 @@ def dias_de_vigencia(db: Session, origen: OrigenLote) -> int:
 # ---------------------------------------------------------------------------
 # Saldo
 # ---------------------------------------------------------------------------
- 
- 
+
+
 def calcular_saldo(
     db: Session,
     usuario_id: uuid.UUID,
     tipo_saldo: TipoSaldo | None = None,
 ) -> int:
     #Suma lo que queda en los lotes que todavia no vencen.
- 
+
 
     #Filtra por fecha y no por el campo estado para mayor seguridad del estado del token.
     sentencia = select(func.coalesce(func.sum(LoteDeTokens.cantidad_restante), 0)).where(
@@ -118,8 +123,8 @@ def lotes_vigentes(db: Session, usuario_id: uuid.UUID) -> list[LoteDeTokens]:
 # ---------------------------------------------------------------------------
 # Entradas
 # ---------------------------------------------------------------------------
- 
- 
+
+
 def otorgar(
     db: Session,
     usuario_id: uuid.UUID,
@@ -132,13 +137,13 @@ def otorgar(
     tipo_transaccion: TipoTransaccion | None = None,
 ) -> LoteDeTokens:
     #Crea un lote nuevo y deja registrada la entrada.
- 
+
     if cantidad <= 0:
         raise ValueError("La cantidad a otorgar debe ser mayor que cero")
- 
+
     momento = ahora()
     saldo_previo = calcular_saldo(db, usuario_id)
- 
+
     lote = LoteDeTokens(
         usuario_id=usuario_id,
         tipo_saldo=tipo_saldo,
@@ -151,7 +156,7 @@ def otorgar(
     )
     db.add(lote)
     db.flush()  # asigna el id del lote
- 
+
     db.add(
         Transaccion(
             usuario_origen_id=usuario_origen_id,
@@ -171,8 +176,8 @@ def otorgar(
 # ---------------------------------------------------------------------------
 # Retenciones
 # ---------------------------------------------------------------------------
- 
- 
+
+
 def _lotes_consumibles(db: Session, usuario_id: uuid.UUID) -> list[LoteDeTokens]:
 
     #Lotes con saldo y sin vencer, en el orden en que se deben gastar.
@@ -196,15 +201,15 @@ def retener(
     solicitud_id: uuid.UUID | None = None,
 ) -> Retencion:
     #Saca tokens de los lotes del usuario y los deja apartados.
- 
+
     if cantidad <= 0:
         raise ValueError("La cantidad a retener debe ser mayor que cero")
- 
+
     lotes = _lotes_consumibles(db, usuario_id)
     disponible = sum(lote.cantidad_restante for lote in lotes)
     if disponible < cantidad:
         raise SaldoInsuficiente(disponible, cantidad)
- 
+
     momento = ahora()
     retencion = Retencion(
         usuario_id=usuario_id,
@@ -215,7 +220,7 @@ def retener(
     )
     db.add(retencion)
     db.flush()
- 
+
     pendiente = cantidad
     saldo = disponible
     for lote in lotes:
@@ -227,7 +232,7 @@ def retener(
             lote.estado = EstadoLote.AGOTADO
         pendiente -= tomado
         saldo -= tomado
- 
+
         db.add(
             Transaccion(
                 usuario_origen_id=usuario_id,
@@ -240,7 +245,7 @@ def retener(
                 saldo_resultante=saldo,
             )
         )
- 
+
     db.flush()
     return retencion
 
@@ -260,7 +265,7 @@ def liberar(
 ) -> LoteDeTokens:
 
     retencion = _obtener_retencion_activa(db, retencion_id)
- 
+
     lote = otorgar(
         db,
         usuario_id=tutor_id,
@@ -271,7 +276,7 @@ def liberar(
         usuario_origen_id=retencion.usuario_id,
         retencion_id=retencion.id,
     )
- 
+
     retencion.estado = EstadoRetencion.LIBERADA
     retencion.fecha_liberacion = ahora()
     retencion.motivo_resolucion = motivo
@@ -281,14 +286,14 @@ def liberar(
 def reembolsar(db: Session, retencion_id: uuid.UUID, motivo: str) -> None:
     #Devuelve cada token retenido al lote exacto del que salio.
     retencion = _obtener_retencion_activa(db, retencion_id)
- 
+
     consumos = db.execute(
         select(Transaccion).where(
             Transaccion.retencion_id == retencion.id,
             Transaccion.tipo == TipoTransaccion.CONSUMO,
         )
     ).scalars().all()
- 
+
     momento = ahora()
     for consumo in consumos:
         lote = db.get(LoteDeTokens, consumo.lote_id, with_for_update=True)
@@ -321,8 +326,84 @@ def reembolsar(db: Session, retencion_id: uuid.UUID, motivo: str) -> None:
                 retencion_id=retencion.id,
                 tipo_transaccion=TipoTransaccion.REEMBOLSO,
             )
- 
+
     retencion.estado = EstadoRetencion.REEMBOLSADA
     retencion.fecha_liberacion = momento
     retencion.motivo_resolucion = motivo
     db.flush()
+
+
+# ---------------------------------------------------------------------------
+# Historial (solo lectura)
+# ---------------------------------------------------------------------------
+
+
+def _detalles_de_retenciones(
+    db: Session, retencion_ids: list[uuid.UUID], usuario_id: uuid.UUID
+) -> dict[uuid.UUID, tuple[str, str]]:
+    # Por cada retencion: el tema de la solicitud y el nombre de la otra persona.
+    if not retencion_ids:
+        return {}
+    aprendiz = aliased(Usuario)
+    tutor = aliased(Usuario)
+    # La extension no guarda la solicitud: se llega a ella por la sesion.
+    solicitud_id = func.coalesce(Retencion.solicitud_id, Sesion.solicitud_id)
+    filas = db.execute(
+        select(Retencion.id, Tema.nombre, Solicitud.aprendiz_id, aprendiz.nombre_visible, tutor.nombre_visible)
+        .select_from(Retencion)
+        .outerjoin(Sesion, Sesion.id == Retencion.sesion_id)
+        .join(Solicitud, Solicitud.id == solicitud_id)
+        .join(HabilidadOfrecida, HabilidadOfrecida.id == Solicitud.habilidad_id)
+        .join(Tema, Tema.id == HabilidadOfrecida.tema_id)
+        .join(aprendiz, aprendiz.id == Solicitud.aprendiz_id)
+        .join(tutor, tutor.id == Solicitud.tutor_id)
+        .where(Retencion.id.in_(retencion_ids))
+    ).all()
+    return {
+        fila[0]: (fila[1], fila[4] if fila[2] == usuario_id else fila[3])
+        for fila in filas
+    }
+
+
+def historial(db: Session, usuario_id: uuid.UUID, limite: int = 50) -> list[dict]:
+    # Del mas nuevo al mas antiguo. Un consumo que cruza varios lotes se junta en un solo movimiento.
+    clave = func.coalesce(Transaccion.retencion_id, Transaccion.id)
+    fecha = func.max(Transaccion.fecha)
+    saldo = case(
+        (Transaccion.tipo == TipoTransaccion.CONSUMO, func.min(Transaccion.saldo_resultante)),
+        else_=func.max(Transaccion.saldo_resultante),
+    )
+    filas = db.execute(
+        select(
+            clave,
+            Transaccion.retencion_id,
+            Transaccion.tipo,
+            fecha,
+            func.sum(Transaccion.cantidad),
+            saldo,
+            func.min(LoteDeTokens.origen),
+        )
+        .join(LoteDeTokens, LoteDeTokens.id == Transaccion.lote_id)
+        .where(Transaccion.usuario_destino_id == usuario_id)
+        .group_by(clave, Transaccion.retencion_id, Transaccion.tipo)
+        .order_by(fecha.desc(), clave)
+        .limit(limite)
+    ).all()
+
+    detalles = _detalles_de_retenciones(db, [f[1] for f in filas if f[1] is not None], usuario_id)
+    movimientos = []
+    for id_, retencion_id, tipo, momento, cantidad, saldo_final, origen in filas:
+        tema, contraparte = detalles.get(retencion_id, (None, None))
+        movimientos.append(
+            {
+                "id": id_,
+                "fecha": momento,
+                "tipo": tipo,
+                "origen": origen,
+                "cantidad": -cantidad if tipo == TipoTransaccion.CONSUMO else cantidad,
+                "saldo_resultante": saldo_final,
+                "tema": tema,
+                "contraparte": contraparte,
+            }
+        )
+    return movimientos

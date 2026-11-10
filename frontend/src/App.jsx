@@ -11,6 +11,7 @@ import { CrearCuenta } from './paginas/CrearCuenta'
 import { Ingresar } from './paginas/Ingresar'
 import { Inicio } from './paginas/Inicio'
 import { MiCuenta } from './paginas/MiCuenta'
+import { MisTokens } from './paginas/MisTokens'
 import { NoEncontrada } from './paginas/NoEncontrada'
 import { PerfilPublico } from './paginas/PerfilPublico'
 import { Sala } from './paginas/Sala'
@@ -34,6 +35,7 @@ export default function App() {
           <Route path="mi-cuenta" element={<MiCuenta />} />
           <Route path="verificar" element={<Verificar />} />
           <Route path="tienda" element={<Tienda />} />
+          <Route path="tokens" element={<MisTokens />} />
           <Route path="buscar" element={<Buscar />} />
           <Route path="solicitudes" element={<Solicitudes />} />
           <Route path="sesiones" element={<Sesiones />} />

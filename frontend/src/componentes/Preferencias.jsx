@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { guardarPreferencias, obtenerPreferencias } from '../api/perfiles'
 import { useSesion } from '../sesion/useSesion'
+import { cambiarSonidos, sonidosActivos, tocar } from '../sonido/sonidos'
 import { Aviso } from './ui/Aviso'
 import { Tarjeta } from './ui/Tarjeta'
 
@@ -22,6 +23,7 @@ export function Preferencias() {
   const { token } = useSesion()
   const [valores, setValores] = useState(null)
   const [error, setError] = useState(null)
+  const [sonidos, setSonidos] = useState(sonidosActivos)
 
   useEffect(() => {
     let vigente = true
@@ -42,6 +44,13 @@ export function Preferencias() {
     } catch (e) {
       setError(e.message)
     }
+  }
+
+  // Los sonidos se guardan en este navegador, no en la cuenta
+  function cambiarSonido(activos) {
+    cambiarSonidos(activos)
+    setSonidos(activos)
+    if (activos) tocar('aviso')
   }
 
   if (!valores) return null
@@ -71,6 +80,25 @@ export function Preferencias() {
             </span>
           </label>
         ))}
+        <label className="flex items-start gap-3">
+          <input
+            type="checkbox"
+            role="switch"
+            checked={sonidos}
+            onChange={(e) => cambiarSonido(e.target.checked)}
+            aria-labelledby="titulo-sonidos"
+            aria-describedby="ayuda-sonidos"
+            className="mt-1 size-4 accent-oceano"
+          />
+          <span>
+            <span id="titulo-sonidos" className="block text-sm font-semibold">
+              Sonidos
+            </span>
+            <span id="ayuda-sonidos" className="block text-xs text-tinta/65">
+              Avisos nuevos, la sala y el fin del tiempo. Se guarda en este navegador.
+            </span>
+          </span>
+        </label>
       </div>
       {error && (
         <Aviso tipo="error" className="mt-3">
