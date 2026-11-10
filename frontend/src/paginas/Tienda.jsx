@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react'
+import { Link } from 'react-router'
 import { comprarPaquete, obtenerCompras, obtenerPaquetes } from '../api/tienda'
 import { useSaldo } from '../saldo/useSaldo'
 import { useSesion } from '../sesion/useSesion'
@@ -157,6 +158,9 @@ export function Tienda() {
               <dt className="border-t border-tinta/15 pt-2.5">Total</dt>
               <dd className="border-t border-tinta/15 pt-2.5 text-right font-extrabold">{saldo.total}</dd>
             </dl>
+            <Link to="/tokens" className="mt-3 inline-block text-[13px] font-semibold text-oceano hover:underline">
+              Ver historial de tokens
+            </Link>
           </Tarjeta>
         )}
         <Tarjeta variante="gris" className="text-xs leading-relaxed text-tinta/65">

@@ -66,7 +66,7 @@ describe('inicio con sesion', () => {
     expect(await screen.findByRole('heading', { name: 'Hola Ana, ¿qué duda resolvemos hoy?' })).toBeInTheDocument()
     expect(await screen.findByText('tokens gratuitos')).toBeInTheDocument()
     expect(screen.getByText('tokens pagados')).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: '14 tokens' })).toHaveAttribute('href', '/tienda')
+    expect(screen.getByRole('link', { name: '14 tokens' })).toHaveAttribute('href', '/tokens')
   })
 
   it('avisa cuando hay tokens retenidos', async () => {
