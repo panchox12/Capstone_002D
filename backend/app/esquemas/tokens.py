@@ -6,6 +6,7 @@ from datetime import datetime
 from pydantic import BaseModel, ConfigDict
 
 from app.modelos.lote_tokens import OrigenLote, TipoSaldo
+from app.modelos.transaccion import TipoTransaccion
 
 
 class LoteLeer(BaseModel):
@@ -29,6 +30,19 @@ class SaldoLeer(BaseModel):
     videos_vistos_hoy: int
     tope_videos_por_dia: int
     lotes: list[LoteLeer]
+
+
+# Una linea del historial: cuanto entro o salio, por que y con quien.
+class MovimientoLeer(BaseModel):
+    id: uuid.UUID
+    fecha: datetime
+    tipo: TipoTransaccion
+    origen: OrigenLote
+    # Negativa cuando los tokens salen del saldo.
+    cantidad: int
+    saldo_resultante: int
+    tema: str | None = None
+    contraparte: str | None = None
 
 
 class VideoLeer(BaseModel):

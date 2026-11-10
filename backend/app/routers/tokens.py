@@ -1,11 +1,11 @@
 """Saldo propio y videos publicitarios."""
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 
 from app.db.sesion import obtener_db
 from app.dependencias import usuario_activo
-from app.esquemas.tokens import LoteLeer, SaldoLeer, VideoLeer
+from app.esquemas.tokens import LoteLeer, MovimientoLeer, SaldoLeer, VideoLeer
 from app.modelos.lote_tokens import TipoSaldo
 from app.modelos.usuario import Usuario
 from app.servicios import entradas, parametros, tokens
@@ -30,6 +30,15 @@ def mi_saldo(
         tope_videos_por_dia=parametros.obtener_entero(db, entradas.PARAM_TOPE_VIDEOS),
         lotes=[LoteLeer.model_validate(lote) for lote in tokens.lotes_vigentes(db, usuario.id)],
     )
+
+
+@router.get("/movimientos", response_model=list[MovimientoLeer], summary="Mis ultimos movimientos de tokens")
+def mis_movimientos(
+    limite: int = Query(50, ge=1, le=200),
+    usuario: Usuario = Depends(usuario_activo),
+    db: Session = Depends(obtener_db),
+) -> list[MovimientoLeer]:
+    return [MovimientoLeer(**movimiento) for movimiento in tokens.historial(db, usuario.id, limite)]
 
 
 @router.post(
