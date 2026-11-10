@@ -1,4 +1,4 @@
-import { lazy, Suspense, useCallback, useEffect, useState } from 'react'
+import { lazy, Suspense, useCallback, useEffect, useRef, useState } from 'react'
 import { useParams } from 'react-router'
 import { entrarASala, obtenerSesion } from '../api/sesiones'
 import { Aviso } from '../componentes/ui/Aviso'
@@ -13,6 +13,7 @@ import { ESTADOS_SESION, reloj } from '../sala/tiempo'
 import { Valorar } from '../sala/Valorar'
 import { useSaldo } from '../saldo/useSaldo'
 import { useSesion } from '../sesion/useSesion'
+import { tocar } from '../sonido/sonidos'
 import { plural } from '../utilidades/formato'
 
 // LiveKit pesa: se descarga recien cuando alguien entra a una sala.
@@ -20,6 +21,9 @@ const VideoLlamada = lazy(() => import('../sala/VideoLlamada').then((m) => ({ de
 
 // Mientras la sesion esta viva se pregunta seguido: el tiempo lo lleva el servidor.
 const MILISEGUNDOS_ENTRE_REVISIONES = 5000
+
+// Cuando quedan estos segundos del tiempo pagado suena un aviso.
+const SEGUNDOS_AVISO_FIN = 120
 
 const AVISO_GRABACION =
   'Esta sesión se graba. La grabación se borra a las 24 horas, salvo que alguien la reporte, y solo la ve el equipo de soporte.'
@@ -71,6 +75,8 @@ export function Sala() {
   const [error, setError] = useState(null)
   const [entrando, setEntrando] = useState(false)
   const [segundosPasados, setSegundosPasados] = useState(0)
+  const anterior = useRef(null)
+  const avisoFin = useRef(false)
 
   const cargar = useCallback(
     () =>
@@ -110,6 +116,27 @@ export function Sala() {
     const segundero = setInterval(() => setSegundosPasados((s) => s + 1), 1000)
     return () => clearInterval(segundero)
   }, [])
+
+  // Sonidos: la otra persona entra, se cae o vuelve
+  useEffect(() => {
+    const antes = anterior.current
+    anterior.current = sesion
+    if (!antes || !sesion) return
+    if (antes.estado === 'esperando' && sesion.estado === 'en_curso') tocar('entra')
+    else if (!antes.pausa_activa && sesion.pausa_activa) tocar('sale')
+    else if (antes.pausa_activa && !sesion.pausa_activa && sesion.estado === 'en_curso') tocar('entra')
+  }, [sesion])
+
+  // Sonido cuando quedan dos minutos; se rearma si una extensión suma tiempo
+  useEffect(() => {
+    if (!sesion || sesion.estado !== 'en_curso' || sesion.pausa_activa) return
+    const restantes = sesion.segundos_restantes_bloque - segundosPasados
+    if (restantes > SEGUNDOS_AVISO_FIN) avisoFin.current = false
+    else if (restantes > 0 && !avisoFin.current) {
+      avisoFin.current = true
+      tocar('tiempo')
+    }
+  }, [sesion, segundosPasados])
 
   async function entrar() {
     setError(null)
