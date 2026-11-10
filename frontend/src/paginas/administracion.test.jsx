@@ -5,7 +5,7 @@ import { describe, expect, it } from 'vitest'
 import App from '../App'
 import { respuestaJson, simularApi, USUARIO_ANA } from '../pruebas/apiFalsa'
 import { SesionProvider } from '../sesion/SesionProvider'
- 
+
 function abrirEn(ruta) {
   return render(
     <MemoryRouter initialEntries={[ruta]}>
@@ -15,7 +15,7 @@ function abrirEn(ruta) {
     </MemoryRouter>,
   )
 }
- 
+
 function conRol(rol, rutas = {}) {
   localStorage.setItem('cachai_token', 'token-de-ana')
   return simularApi({
@@ -24,7 +24,7 @@ function conRol(rol, rutas = {}) {
     ...rutas,
   })
 }
- 
+
 const INDICADORES = {
   dias_ventana: 30,
   masa_circulante: 120,
@@ -39,11 +39,11 @@ const INDICADORES = {
   usuarios_activos: 40,
   sesiones_terminadas: 18,
 }
- 
+
 const PARAMETROS = [
   { nombre: 'tokens_gratis_semanales', valor: '10', descripcion: 'Tokens gratis que se entregan cada semana', actualizado_en: '2026-11-01T00:00:00Z' },
 ]
- 
+
 describe('panel del administrador', () => {
   it('muestra los indicadores con formato', async () => {
     conRol('administrador', {
@@ -51,13 +51,14 @@ describe('panel del administrador', () => {
       'GET /admin/parametros': () => respuestaJson(PARAMETROS),
     })
     abrirEn('/admin')
- 
+
     expect(await screen.findByText('120')).toBeInTheDocument()
     // Segun el navegador, Intl pone o no un espacio antes del signo.
     expect(screen.getByText(/^75\s?%$/)).toBeInTheDocument()
+    await userEvent.setup().click(screen.getByRole('button', { name: 'Menú de tu cuenta' }))
     expect(screen.getByRole('link', { name: 'Administración' })).toBeInTheDocument()
   })
- 
+
   it('guarda un parametro cambiado', async () => {
     const fetchFalso = conRol('administrador', {
       'GET /admin/indicadores': () => respuestaJson(INDICADORES),
@@ -67,22 +68,24 @@ describe('panel del administrador', () => {
     })
     const usuario = userEvent.setup()
     abrirEn('/admin')
- 
+
     const campo = await screen.findByLabelText(/Tokens gratis que se entregan cada semana/)
     await usuario.clear(campo)
     await usuario.type(campo, '12')
     await usuario.click(screen.getByRole('button', { name: 'Guardar' }))
- 
+
     expect(await screen.findByText('Se guardó tokens_gratis_semanales: ahora vale 12.')).toBeInTheDocument()
     const [, opciones] = fetchFalso.mock.calls.find(([, op]) => op.method === 'PUT')
     expect(JSON.parse(opciones.body)).toEqual({ valor: 12 })
   })
- 
+
   it('un usuario comun no ve el panel ni el enlace', async () => {
     conRol('usuario')
     abrirEn('/admin')
- 
+
     expect(await screen.findByText('Esta sección es solo para el equipo de Cachai.')).toBeInTheDocument()
+    await userEvent.setup().click(screen.getByRole('button', { name: 'Menú de tu cuenta' }))
+    expect(screen.getByRole('link', { name: 'Mi cuenta' })).toBeInTheDocument()
     expect(screen.queryByRole('link', { name: 'Administración' })).not.toBeInTheDocument()
   })
 })

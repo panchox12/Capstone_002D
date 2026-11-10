@@ -83,7 +83,8 @@ describe('sesion y rutas privadas', () => {
     const usuario = userEvent.setup()
     abrirEn('/')
 
-    await usuario.click(await screen.findByRole('button', { name: 'Cerrar sesión' }))
+    await usuario.click(await screen.findByRole('button', { name: 'Menú de tu cuenta' }))
+    await usuario.click(screen.getByRole('button', { name: 'Cerrar sesión' }))
 
     const menu = screen.getByRole('navigation', { name: 'Principal' })
     expect(within(menu).getByRole('link', { name: 'Ingresar' })).toBeInTheDocument()
@@ -129,7 +130,8 @@ describe('presencia', () => {
     const usuario = userEvent.setup()
     abrirEn('/')
 
-    await usuario.click(await screen.findByRole('button', { name: 'Cerrar sesión' }))
+    await usuario.click(await screen.findByRole('button', { name: 'Menú de tu cuenta' }))
+    await usuario.click(screen.getByRole('button', { name: 'Cerrar sesión' }))
 
     expect(llamadas(fetchFalso, 'DELETE', '/presencia')).toHaveLength(1)
   })
